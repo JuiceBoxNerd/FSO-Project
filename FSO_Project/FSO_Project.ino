@@ -10,8 +10,14 @@ void loop() {
   if(Serial.available()) {
     String inputText = Serial.readStringUntil('\n');
     Serial.print("Binary Output: ");
-  }
-  for()
+    
+    for(int i = 0; i < inputText.length(); i++){
+      char c = inputText[i];
+      printBinary(c);
+      Serial.print(" ");
+      }
+    Serial.println();
+    Serial.println("Enter another text message:");
 }
 void printBinary(char c) {
   for(int i = 7; i >= 0; i--){
