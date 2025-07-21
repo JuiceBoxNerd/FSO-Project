@@ -1,7 +1,7 @@
 void setup() {
   Serial.begin(9600);
   while(!Serial);
-  Serial.println("Enter a text message:")
+  Serial.println("Enter a text message:");
 
 }
 
@@ -18,6 +18,7 @@ void loop() {
       }
     Serial.println();
     Serial.println("Enter another text message:");
+  }
 }
 void printBinary(char c) {
   for(int i = 7; i >= 0; i--){
@@ -29,3 +30,5 @@ void printBinary(char c) {
     }
   }
 }
+
+
