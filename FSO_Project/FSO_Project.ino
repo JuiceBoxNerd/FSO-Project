@@ -1,4 +1,5 @@
 #
+int sendSpeed = 100;
 void setup() {
   pinMode(LED_BUILTIN, OUTPUT); 
   pinMode(D2, OUTPUT);
@@ -23,19 +24,30 @@ void loop() {
     Serial.println("Enter another text message:");
   }
 }
+
 void printBinary(char c) {
   for(int i = 7; i >= 0; i--){
     if(c & (1 << i)){
       Serial.print("1");
-      digitalWrite(LED_BUILTIN, HIGH);
+      sendBit(1);
       delay(100);
     }
     else{
       Serial.print("0");
-      digitalWrite(LED_BUILTIN, LOW);
+      sendBit(0);
       delay(100);
     }
   }
+}
+
+void sendBit(int x){
+  if(x == 1){
+    digitalWrite(D2, HIGH)
+  }
+  else{
+    digitalWrite(D2, LOW)
+  }
+  delay(sendSpeed);
 }
 
 
