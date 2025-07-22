@@ -16,15 +16,22 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
   if(bitStart()){
-    getBit()
+    getInput();
+    Serial.println("Decode word is " + binaryToText());
   }
 }
 
-void binaryToText(){
+String binaryToText(){
+  String text = "";
   int len = binaryInput.length();
   for(int i = 0; i < len; i += 8){
     String letter = binaryInput.substring(i, i+8);
+    char c = strtol(letter.cstr(), NULL, 2);
+    Serial.print(c);
+    text += c;
   }
+  Serial.println();
+  return text;
 }
 
 void getInput(){
@@ -56,5 +63,6 @@ void getBit(){
   else{
     binaryInput += "0";
   }
+  delay(recSpeed);
 }
 
