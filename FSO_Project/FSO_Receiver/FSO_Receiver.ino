@@ -57,12 +57,14 @@ boolean bitStart(){
 }
 
 void getBit(){
-  if(analogRead(receiver) >= threshold){
-    binaryInput += "1";
-  }
-  else{
-    binaryInput += "0";
-  }
+  unsigned long start = millis();
+  while(millis() - start < recSpeed){
+    if(analogRead(receiver) >= threshold){
+      binaryInput += "1";
+    }
+    else{
+      binaryInput += "0";
+    }
   delay(recSpeed);
 }
 
