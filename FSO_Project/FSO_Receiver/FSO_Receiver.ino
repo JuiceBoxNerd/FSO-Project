@@ -20,8 +20,23 @@ void loop() {
   }
 }
 
-void binarytoText(){
+void binaryToText(){
+  int len = binaryInput.length();
+  for(int i = 0; i < len; i += 8){
+    String letter = binaryInput.substring(i, i+8);
+  }
+}
 
+void getInput(){
+  int i = 0
+  while(i = 1){
+    getBit();
+    if(binaryInput.length % 8 == 0){
+      if(binaryInput.substring(binaryInput.length() - 8) == "00111110"){
+        i = 1;
+      }
+    }
+  }
 }
 
 boolean bitStart(){
@@ -34,9 +49,6 @@ boolean bitStart(){
   return true;
 }
 
-String processWord(){
-
-}
 void getBit(){
   if(analogRead(receiver) >= threshold){
     binaryInput += "1";
@@ -44,5 +56,5 @@ void getBit(){
   else{
     binaryInput += "0";
   }
-  
 }
+

@@ -16,6 +16,7 @@ void loop() {
   // put your main code here, to run repeatedly:
   if(Serial.available()) {
     String inputText = Serial.readStringUntil('\n');
+    inputText + ">";
     startBit();
     Serial.print("Transmitting Binary...\nBinary Output: ");
     
@@ -36,12 +37,10 @@ void sendBinary(char c) {
     if(c & (1 << i)){
       Serial.print("1");
       sendBit(1);
-      delay(100);
     }
     else{
       Serial.print("0");
       sendBit(0);
-      delay(100);
     }
   }
 }
