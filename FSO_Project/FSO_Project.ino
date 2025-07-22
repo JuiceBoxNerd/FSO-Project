@@ -1,5 +1,7 @@
+#
 void setup() {
-  pinMode(LED_BUILTIN, OUTPUT);
+  pinMode(LED_BUILTIN, OUTPUT); 
+  pinMode(D2, OUTPUT);
   Serial.begin(9600);
   while(!Serial);
   Serial.println("Enter a text message:");
@@ -26,12 +28,12 @@ void printBinary(char c) {
     if(c & (1 << i)){
       Serial.print("1");
       digitalWrite(LED_BUILTIN, HIGH);
-      delay(200);
+      delay(100);
     }
     else{
       Serial.print("0");
       digitalWrite(LED_BUILTIN, LOW);
-      delay(200);
+      delay(100);
     }
   }
 }
