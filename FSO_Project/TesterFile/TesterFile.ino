@@ -10,6 +10,9 @@ void setup() {
 void loop() {
   // put your main  code here, to run repeatedly:
   digitalWrite(2, HIGH);
+  if(Serial.readStringUntil('\n') == "stop"){
+    digitalWrite(2, LOW);
+  }
 }
 
 String binaryToText(){

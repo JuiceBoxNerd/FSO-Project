@@ -33,7 +33,7 @@ int initializer(){
   int count = 0;
   while(millis() - start < 1000){
     total += analogRead(receiver);
-    //Serial.println(analogRead(receiver));
+    Serial.println(analogRead(receiver));
     count++;
   }
   Serial.println(total/count);
