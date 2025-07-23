@@ -1,6 +1,6 @@
 
-int recSpeed = 100;
-int receiver = A1;
+const int recSpeed = 100;
+const int receiver = A1;
 int threshold = 100;
 int bitCount = 0;
 String binaryInput = "";
