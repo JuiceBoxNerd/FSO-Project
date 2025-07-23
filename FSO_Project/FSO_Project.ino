@@ -1,4 +1,4 @@
-#
+#include
 int sendSpeed = 100;
 int transmitter = D2;
 
@@ -47,13 +47,14 @@ void sendBinary(char c) {
 }
 
 void sendBit(int x){
+  unsigned long start = millis();
   if(x == 1){
     digitalWrite(transmitter, HIGH)
   }
   else{
     digitalWrite(transmitter, LOW)
   }
-  delay(sendSpeed);
+  while(millis()-start() < sendSpeed);
 }
 
 void startBit(){

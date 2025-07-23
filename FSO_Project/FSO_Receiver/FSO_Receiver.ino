@@ -18,6 +18,7 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
   if(bitStart()){
+    Serial.println("Receiving code...");
     getInput();
     Serial.println("Decoded word is " + binaryToText());
   }
@@ -51,7 +52,7 @@ void getInput(){
   int i = 0
   while(i == 0){
     binaryInput = getBit(binaryInput);
-    if(binaryInput.length % 8 == 0){
+    if(binaryInput.length() % 8 == 0){
       if(binaryInput.substring(binaryInput.length() - 8) == "00111110"){
         i = 1;
       }
