@@ -8,19 +8,22 @@ String binaryInput = "";
 
 void setup() {
   // put your setup code here, to run once:
-  pinMode
+  pinMode(receiver, INPUT);
 
   Serial.begin(9600);
+  while(!Serial);
   threshold = initializer();
   Serial.println("Threshold: " + threshold);
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-  if(bitStart()){
-    Serial.println("Receiving code...");
-    getInput();
-    Serial.println("Decoded word is " + binaryToText());
+  if(Serial.available()){
+    if(bitStart()){
+      Serial.println("Receiving code...");
+      getInput();
+      Serial.println("Decoded word is " + binaryToText());
+    }
   }
 }
 
@@ -30,8 +33,10 @@ int initializer(){
   int count = 0;
   while(millis() - start < 1000){
     total += analogRead(receiver);
+    //Serial.println(analogRead(receiver));
     count++;
   }
+  Serial.println(total/count);
   return total/count;
 }
 
@@ -40,7 +45,7 @@ String binaryToText(){
   int len = binaryInput.length();
   for(int i = 0; i < len; i += 8){
     String letter = binaryInput.substring(i, i+8);
-    char c = strtol(letter.cstr(), NULL, 2);
+    char c = strtol(letter.c_str(), NULL, 2);
     Serial.print(c);
     text += c;
   }
@@ -49,7 +54,7 @@ String binaryToText(){
 }
 
 void getInput(){
-  int i = 0
+  int i = 0;
   while(i == 0){
     binaryInput = getBit(binaryInput);
     if(binaryInput.length() % 8 == 0){
@@ -81,7 +86,7 @@ String getBit(String input){
       delay(recSpeed - (millis() - start));
       return output + "1";
     }
-    
+  }
   return output + "0";
 }
 
