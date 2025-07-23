@@ -7,6 +7,7 @@ void setup() {
   pinMode(transmitter, OUTPUT);
   Serial.begin(9600);
   while(!Serial);
+  delay(1000);
   Serial.println("Enter a text message:");
 
 }

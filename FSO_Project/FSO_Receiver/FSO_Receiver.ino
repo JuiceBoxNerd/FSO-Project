@@ -11,6 +11,8 @@ void setup() {
   pinMode
 
   Serial.begin(9600);
+  threshold = initializer();
+  Serial.println("Threshold: " + threshold);
 }
 
 void loop() {
@@ -21,6 +23,16 @@ void loop() {
   }
 }
 
+int initializer(){
+  unsigned long start = millis();
+  int total = 0;
+  int count = 0;
+  while(millis() - start < 1000){
+    total += analogRead(receiver);
+    count++;
+  }
+  return total/count;
+}
 
 String binaryToText(){
   String text = "";
