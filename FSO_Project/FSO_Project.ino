@@ -54,7 +54,7 @@ void sendBit(int x){
   else{
     digitalWrite(transmitter, LOW)
   }
-  while(millis()-start() < sendSpeed);
+  while(millis()-start < sendSpeed);
 }
 
 void startBit(){
