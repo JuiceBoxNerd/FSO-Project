@@ -17,9 +17,10 @@ void loop() {
   // put your main code here, to run repeatedly:
   if(bitStart()){
     getInput();
-    Serial.println("Decode word is " + binaryToText());
+    Serial.println("Decoded word is " + binaryToText());
   }
 }
+
 
 String binaryToText(){
   String text = "";
