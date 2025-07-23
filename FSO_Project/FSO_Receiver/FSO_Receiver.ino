@@ -36,10 +36,13 @@ String binaryToText(){
 
 void getInput(){
   int i = 0
-  while(i = 1){
-    getBit();
+  while(i == 0){
+    binaryInput = getBit(binaryInput);
     if(binaryInput.length % 8 == 0){
       if(binaryInput.substring(binaryInput.length() - 8) == "00111110"){
+        i = 1;
+      }
+      else if(binaryInput.substring(binaryInput.length() - 8) == "00000000"){
         i = 1;
       }
     }
@@ -56,15 +59,15 @@ boolean bitStart(){
   return true;
 }
 
-void getBit(){
+String getBit(String input){
+  String output = input;
   unsigned long start = millis();
   while(millis() - start < recSpeed){
     if(analogRead(receiver) >= threshold){
-      binaryInput += "1";
+      delay(recSpeed - (millis() - start));
+      return output + "1";
     }
-    else{
-      binaryInput += "0";
-    }
-  delay(recSpeed);
+    
+  return output + "0";
 }
 
