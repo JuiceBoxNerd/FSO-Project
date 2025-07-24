@@ -1,5 +1,5 @@
 
-const int recSpeed = 25;
+const int recSpeed = 50;
 const int receiver = A3;
 int threshold = 100;
 int bitCount = 0;
@@ -137,7 +137,7 @@ boolean bitStart(){
 
 String getBit(String input) {
   unsigned long start = millis();
-  int samples = 5;
+  int samples = 10;
   int lightDetectedCount = 0;
 
   // Sample multiple times during first part of bit window
@@ -145,7 +145,7 @@ String getBit(String input) {
     if (analogRead(receiver) <= threshold) {
       lightDetectedCount++;
     }
-    delay((recSpeed / 10) / samples);  // spread samples evenly
+    delay((recSpeed / 12) / samples);  // spread samples evenly
   }
 
   // Wait out the rest of the bit window
@@ -159,13 +159,15 @@ String getBit(String input) {
   Serial.print(newBit);
   if (output.length() % 8 == 0) {
     Serial.print(" ");
-    spaceCount++;
+    spaceCount++;  // count *groups* of 8 bits
   }
 
-  if (spaceCount >= 160) {
+  // After 20 groups (you can change this), print a newline and reset counter
+  if (spaceCount >= 20) {
     Serial.println();
-    spaceCount = 0;
+    spaceCount = 0;  // reset counter!
   }
+
 
   return output;
 }
