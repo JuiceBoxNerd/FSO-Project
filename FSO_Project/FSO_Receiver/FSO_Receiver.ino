@@ -1,5 +1,5 @@
 
-const int recSpeed = 100;
+const int recSpeed = 1000;
 const int receiver = A3;
 int threshold = 100;
 int bitCount = 0;
@@ -12,19 +12,20 @@ void setup() {
 
   Serial.begin(9600);
   while(!Serial);
-  delay(1000);
+  delay(500);
   threshold = initializer();
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-  if(Serial.available()){
-    if(bitStart()){
-      Serial.println("Receiving code...");
-      getInput();
-      Serial.println("Decoded word is " + binaryToText());
-    }
+
+  if(bitStart()){
+    Serial.println("Receiving code...");
+    getInput();
+    Serial.println("Decoded word is " + binaryToText());
   }
+  binaryInput = "";
+  
 }
 
 int initializer() {
@@ -50,8 +51,8 @@ int initializer() {
 
   int average = total / count;
   Serial.print("Final Threshold: ");
-  Serial.println(average);
-  return average;
+  Serial.println(average - 100);
+  return average - 100;
 }
 
 String binaryToText(){
@@ -67,16 +68,14 @@ String binaryToText(){
   return text;
 }
 
-void getInput(){
-  int i = 0;
-  while(i == 0){
+void getInput() {
+  while (true) {
     binaryInput = getBit(binaryInput);
-    if(binaryInput.length() % 8 == 0){
-      if(binaryInput.substring(binaryInput.length() - 8) == "00111110"){
-        i = 1;
-      }
-      else if(binaryInput.substring(binaryInput.length() - 8) == "00000000"){
-        i = 1;
+
+    if (binaryInput.length() % 8 == 0) {
+      String lastByte = binaryInput.substring(binaryInput.length() - 8);
+      if (lastByte == "00111110" || lastByte == "00000000") {
+        break;
       }
     }
   }
@@ -84,23 +83,30 @@ void getInput(){
 
 boolean bitStart(){
   for(int i = 0; i < 50; i++){
-    if(analogRead(receiver) < threshold){
+    if(analogRead(receiver) > threshold){
       return false;
     }
     delay(10);
   }
+  delay(recSpeed/2);
   return true;
 }
 
-String getBit(String input){
-  String output = input;
+String getBit(String input) {
   unsigned long start = millis();
-  while(millis() - start < recSpeed){
-    if(analogRead(receiver) >= threshold){
-      delay(recSpeed - (millis() - start));
-      return output + "1";
+
+  while (millis() - start < recSpeed) {
+    if (analogRead(receiver) <= threshold) {
+      Serial.println(input + "1");
+      delay(recSpeed - (millis() - start));  // wait remaining bit duration
+      return input + "1";
     }
+    //Serial.print("receiver:");
+    //Serial.print(analogRead(receiver));
+    //Serial.println("");
   }
-  return output + "0";
+
+  Serial.println(input + "0");
+  return input + "0";
 }
 
