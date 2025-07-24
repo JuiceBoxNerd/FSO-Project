@@ -101,6 +101,9 @@ String getBit(String input) {
       delay(recSpeed - (millis() - start));  // wait remaining bit duration
       return input + "1";
     }
+    //Serial.print("receiver:");
+    //Serial.print(analogRead(receiver));
+    //Serial.println("");
   }
 
   Serial.println(input + "0");
