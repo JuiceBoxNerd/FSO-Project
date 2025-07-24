@@ -1,5 +1,5 @@
 
-const int recSpeed = 50;
+const int recSpeed = 25;
 const int receiver = A3;
 int threshold = 100;
 int bitCount = 0;
@@ -59,10 +59,11 @@ int initializer() {
   return average - 400;
 }
 
-char binaryToChar() {
-  String letter = binaryInput.substring(0, 8);    // get first 8 bits
-  char c = strtol(letter.c_str(), NULL, 2);      // convert binary string to char
-  return c;  
+char binaryToChar(String byteStr) {
+  // Convert 8-bit binary string to char
+  return (char)strtol(byteStr.c_str(), NULL, 2);
+}
+
 
 void getInput() {
   while (true) {
@@ -71,9 +72,12 @@ void getInput() {
     if (binaryInput.length() % 8 == 0) {
       String lastByte = binaryInput.substring(binaryInput.length() - 8);
       if (lastByte == "00111110" || lastByte == "00000000") {
-        break;
+        break;  // terminator found
       }
-      text += binaryToChar();
+
+      // Decode current byte and append to text
+      String currentByte = binaryInput.substring(0, 8);
+      text += binaryToChar(currentByte);
       binaryInput = "";
     }
   }
@@ -92,7 +96,7 @@ boolean bitStart(){
 }
 
 
-String getBit(String input) {
+/*String getBit(String input) {
   unsigned long start = millis();
   bool detected = false;
 
@@ -112,19 +116,57 @@ String getBit(String input) {
   // Add new bit to the string
   String newBit = detected ? "1" : "0";
   String output = input + newBit;
-
-  // Print the bit
+  
+  
+  
   Serial.print(newBit);
-
-  // After every 8 bits, print a space
   if (output.length() % 8 == 0) {
     Serial.print(" ");
   }
   spaceCount++;
-  if(spaceCount == 160){
+
+  // After 160 spaces (~1280 bits), print newline and reset counter
+  if (spaceCount >= 160) {
     Serial.println();
-    spaceCount == 0;
+    spaceCount = 0;
   }
+
+  return output;
+}
+*/
+
+String getBit(String input) {
+  unsigned long start = millis();
+  int samples = 5;
+  int lightDetectedCount = 0;
+
+  // Sample multiple times during first part of bit window
+  for (int i = 0; i < samples; i++) {
+    if (analogRead(receiver) <= threshold) {
+      lightDetectedCount++;
+    }
+    delay((recSpeed / 10) / samples);  // spread samples evenly
+  }
+
+  // Wait out the rest of the bit window
+  while (millis() - start < recSpeed) {}
+
+  bool detected = (lightDetectedCount > samples / 2);  // majority vote
+
+  String newBit = detected ? "1" : "0";
+  String output = input + newBit;
+
+  Serial.print(newBit);
+  if (output.length() % 8 == 0) {
+    Serial.print(" ");
+    spaceCount++;
+  }
+
+  if (spaceCount >= 160) {
+    Serial.println();
+    spaceCount = 0;
+  }
+
   return output;
 }
 
