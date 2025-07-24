@@ -6,7 +6,7 @@ int bitCount = 0;
 String binaryInput = "";
 String text = "";
 int spaceCount = 0;
-
+long cycle = millis();
 
 void setup() {
   // put your setup code here, to run once:
@@ -92,6 +92,7 @@ boolean bitStart(){
     delay(10);
   }
   delay(recSpeed/2 + 500);
+  cycle = millis();
   return true;
 }
 
@@ -136,7 +137,6 @@ boolean bitStart(){
 */
 
 String getBit(String input) {
-  unsigned long start = millis();
   int samples = 10;
   int lightDetectedCount = 0;
 
@@ -149,7 +149,7 @@ String getBit(String input) {
   }
 
   // Wait out the rest of the bit window
-  while (millis() - start < recSpeed) {}
+  while (millis() - cycle < recSpeed) {}
 
   bool detected = (lightDetectedCount > samples / 2);  // majority vote
 
@@ -168,7 +168,7 @@ String getBit(String input) {
     spaceCount = 0;  // reset counter!
   }
 
-
+  cycle = millis();
   return output;
 }
 

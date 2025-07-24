@@ -1,7 +1,7 @@
 
-const int sendSpeed = 250;
+const int sendSpeed = 50;
 const int transmitter = 2;
-
+long cycle = millis();
 void setup() {
   pinMode(LED_BUILTIN, OUTPUT); 
   pinMode(transmitter, OUTPUT);
@@ -17,9 +17,9 @@ void loop() {
   // put your main code here, to run repeatedly:
   if(Serial.available()) {
     String inputText = Serial.readStringUntil('\n');
-    startBit();
     Serial.print("Transmitting " + inputText + " to Binary...\nBinary Output: ");
     inputText = inputText + ">";
+    startBit();
     
     for(int i = 0; i < inputText.length(); i++){
       char c = inputText[i];
@@ -47,16 +47,15 @@ void sendBinary(char c) {
 }
 
 void sendBit(int x){
-  unsigned long start = millis();
   if(x == 1){
     digitalWrite(transmitter, HIGH);
-    while(millis()-start < sendSpeed);
+    while(millis()-cycle < sendSpeed);
   }
   else{
     digitalWrite(transmitter, LOW);
-    while(millis()-start < sendSpeed);
+    while(millis()-cycle < sendSpeed);
   }
-  
+  cycle = millis();
 }
 
 void startBit(){
@@ -64,6 +63,7 @@ void startBit(){
   delay(500);
   digitalWrite(transmitter, LOW);
   delay(500);
+  cycle = millis();
 }
 
 
