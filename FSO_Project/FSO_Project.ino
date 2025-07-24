@@ -1,5 +1,5 @@
 
-const int sendSpeed = 1000;
+const int sendSpeed = 250;
 const int transmitter = 2;
 
 void setup() {
@@ -63,6 +63,7 @@ void startBit(){
   digitalWrite(transmitter, HIGH);
   delay(500);
   digitalWrite(transmitter, LOW);
+  delay(500);
 }
 
 
