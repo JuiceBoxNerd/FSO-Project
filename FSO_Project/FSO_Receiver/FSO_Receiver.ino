@@ -52,7 +52,7 @@ int initializer() {
   int average = total / count;
   Serial.print("Final Threshold: ");
   Serial.println(average - 100);
-  return average - 100;
+  return average - 400;
 }
 
 String binaryToText(){
