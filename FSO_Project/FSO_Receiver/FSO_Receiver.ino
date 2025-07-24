@@ -1,5 +1,5 @@
 
-const int recSpeed = 1000;
+const int recSpeed = 250;
 const int receiver = A3;
 int threshold = 100;
 int bitCount = 0;
@@ -51,14 +51,14 @@ int initializer() {
 
   int average = total / count;
   Serial.print("Final Threshold: ");
-  Serial.println(average - 100);
+  Serial.println(average - 400);
   return average - 400;
 }
 
 String binaryToText(){
   String text = "";
   int len = binaryInput.length();
-  for(int i = 0; i < len; i += 8){
+  for(int i = 0; i < len - 8; i += 8){
     String letter = binaryInput.substring(i, i+8);
     char c = strtol(letter.c_str(), NULL, 2);
     Serial.print(c);
@@ -88,25 +88,39 @@ boolean bitStart(){
     }
     delay(10);
   }
-  delay(recSpeed/2);
+  delay(recSpeed/2 + 500);
   return true;
 }
 
+
 String getBit(String input) {
   unsigned long start = millis();
+  bool detected = false;
 
-  while (millis() - start < recSpeed) {
+  // Only check for the laser in the first fraction of recSpeed
+  while (millis() - start < recSpeed / 5) {
     if (analogRead(receiver) <= threshold) {
-      Serial.println(input + "1");
-      delay(recSpeed - (millis() - start));  // wait remaining bit duration
-      return input + "1";
+      detected = true;
+      break;
     }
-    //Serial.print("receiver:");
-    //Serial.print(analogRead(receiver));
-    //Serial.println("");
   }
 
-  Serial.println(input + "0");
-  return input + "0";
-}
+  // Wait out the rest of the bit interval
+  while (millis() - start < recSpeed) {
+    // keep timing consistent
+  }
 
+  // Append bit
+  String newBit = detected ? "1" : "0";
+  String output = input + newBit;
+
+  // Format for printing
+  int length = output.length();
+  if (length % 8 == 0) {
+    Serial.println(output + " ");
+  } else {
+    Serial.println(output);
+  }
+
+  return output;
+}
