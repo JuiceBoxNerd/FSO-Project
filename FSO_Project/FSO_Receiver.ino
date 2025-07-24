@@ -1,6 +1,6 @@
 
 const int recSpeed = 100;
-const int receiver = A3;
+const int receiver = A1;
 int threshold = 100;
 int bitCount = 0;
 String binaryInput = "";
@@ -12,8 +12,8 @@ void setup() {
 
   Serial.begin(9600);
   while(!Serial);
-  delay(1000);
   threshold = initializer();
+  Serial.println("Threshold: " + threshold);
 }
 
 void loop() {
@@ -27,31 +27,17 @@ void loop() {
   }
 }
 
-int initializer() {
+int initializer(){
   unsigned long start = millis();
-  long total = 0;     // use long to avoid overflow
+  int total = 0;
   int count = 0;
-
-  while (millis() - start < 1000) {
-    int reading = analogRead(receiver);
-    total += reading;
+  while(millis() - start < 1000){
+    total += analogRead(receiver);
+    Serial.println(analogRead(receiver));
     count++;
-
-    // Optional: print raw readings to check range
-    Serial.print("Reading: ");
-    Serial.print(reading);
-    Serial.print(" | Count: ");
-    Serial.print(count);
-    Serial.print(" | Total: ");
-    Serial.print(total);
-    Serial.print(" | Current Avg: ");
-    Serial.println(total / count);
   }
-
-  int average = total / count;
-  Serial.print("Final Threshold: ");
-  Serial.println(average);
-  return average;
+  Serial.println(total/count);
+  return total/count;
 }
 
 String binaryToText(){
