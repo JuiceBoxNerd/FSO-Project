@@ -1,9 +1,11 @@
 
-const int recSpeed = 1000;
+const int recSpeed = 50;
 const int receiver = A3;
 int threshold = 100;
 int bitCount = 0;
 String binaryInput = "";
+String text = "";
+int spaceCount = 0;
 
 
 void setup() {
@@ -14,6 +16,7 @@ void setup() {
   while(!Serial);
   delay(500);
   threshold = initializer();
+  Serial.println();
 }
 
 void loop() {
@@ -22,9 +25,10 @@ void loop() {
   if(bitStart()){
     Serial.println("Receiving code...");
     getInput();
-    Serial.println("Decoded word is " + binaryToText());
+    Serial.println("Decoded word is " + text);
   }
   binaryInput = "";
+  text = "";
   
 }
 
@@ -51,22 +55,15 @@ int initializer() {
 
   int average = total / count;
   Serial.print("Final Threshold: ");
-  Serial.println(average - 100);
-  return average - 100;
+  Serial.println(average - 400);
+  return average - 400;
 }
 
-String binaryToText(){
-  String text = "";
-  int len = binaryInput.length();
-  for(int i = 0; i < len; i += 8){
-    String letter = binaryInput.substring(i, i+8);
-    char c = strtol(letter.c_str(), NULL, 2);
-    Serial.print(c);
-    text += c;
-  }
-  Serial.println();
-  return text;
+char binaryToChar(String byteStr) {
+  // Convert 8-bit binary string to char
+  return (char)strtol(byteStr.c_str(), NULL, 2);
 }
+
 
 void getInput() {
   while (true) {
@@ -75,10 +72,16 @@ void getInput() {
     if (binaryInput.length() % 8 == 0) {
       String lastByte = binaryInput.substring(binaryInput.length() - 8);
       if (lastByte == "00111110" || lastByte == "00000000") {
-        break;
+        break;  // terminator found
       }
+
+      // Decode current byte and append to text
+      String currentByte = binaryInput.substring(0, 8);
+      text += binaryToChar(currentByte);
+      binaryInput = "";
     }
   }
+  Serial.println();
 }
 
 boolean bitStart(){
@@ -88,25 +91,84 @@ boolean bitStart(){
     }
     delay(10);
   }
-  delay(recSpeed/2);
+  delay(recSpeed/2 + 500);
   return true;
 }
 
-String getBit(String input) {
-  unsigned long start = millis();
 
-  while (millis() - start < recSpeed) {
+/*String getBit(String input) {
+  unsigned long start = millis();
+  bool detected = false;
+
+  // Only check for laser flash in first portion of the bit window
+  while (millis() - start < recSpeed / 6) {
     if (analogRead(receiver) <= threshold) {
-      Serial.println(input + "1");
-      delay(recSpeed - (millis() - start));  // wait remaining bit duration
-      return input + "1";
+      detected = true;
+      break;
     }
-    //Serial.print("receiver:");
-    //Serial.print(analogRead(receiver));
-    //Serial.println("");
   }
 
-  Serial.println(input + "0");
-  return input + "0";
+  // Wait out the rest of the bit window
+  while (millis() - start < recSpeed) {
+    // Do nothing
+  }
+
+  // Add new bit to the string
+  String newBit = detected ? "1" : "0";
+  String output = input + newBit;
+  
+  
+  
+  Serial.print(newBit);
+  if (output.length() % 8 == 0) {
+    Serial.print(" ");
+  }
+  spaceCount++;
+
+  // After 160 spaces (~1280 bits), print newline and reset counter
+  if (spaceCount >= 160) {
+    Serial.println();
+    spaceCount = 0;
+  }
+
+  return output;
+}
+*/
+
+String getBit(String input) {
+  unsigned long start = millis();
+  int samples = 10;
+  int lightDetectedCount = 0;
+
+  // Sample multiple times during first part of bit window
+  for (int i = 0; i < samples; i++) {
+    if (analogRead(receiver) <= threshold) {
+      lightDetectedCount++;
+    }
+    delay((recSpeed / 12) / samples);  // spread samples evenly
+  }
+
+  // Wait out the rest of the bit window
+  while (millis() - start < recSpeed) {}
+
+  bool detected = (lightDetectedCount > samples / 2);  // majority vote
+
+  String newBit = detected ? "1" : "0";
+  String output = input + newBit;
+
+  Serial.print(newBit);
+  if (output.length() % 8 == 0) {
+    Serial.print(" ");
+    spaceCount++;  // count *groups* of 8 bits
+  }
+
+  // After 20 groups (you can change this), print a newline and reset counter
+  if (spaceCount >= 20) {
+    Serial.println();
+    spaceCount = 0;  // reset counter!
+  }
+
+
+  return output;
 }
 
