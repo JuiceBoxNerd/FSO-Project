@@ -1,9 +1,11 @@
 
-const int recSpeed = 250;
+const int recSpeed = 50;
 const int receiver = A3;
 int threshold = 100;
 int bitCount = 0;
 String binaryInput = "";
+String text = "";
+int spaceCount = 0;
 
 
 void setup() {
@@ -14,6 +16,7 @@ void setup() {
   while(!Serial);
   delay(500);
   threshold = initializer();
+  Serial.println();
 }
 
 void loop() {
@@ -22,9 +25,10 @@ void loop() {
   if(bitStart()){
     Serial.println("Receiving code...");
     getInput();
-    Serial.println("Decoded word is " + binaryToText());
+    Serial.println("Decoded word is " + text);
   }
   binaryInput = "";
+  text = "";
   
 }
 
@@ -55,18 +59,10 @@ int initializer() {
   return average - 400;
 }
 
-String binaryToText(){
-  String text = "";
-  int len = binaryInput.length();
-  for(int i = 0; i < len - 8; i += 8){
-    String letter = binaryInput.substring(i, i+8);
-    char c = strtol(letter.c_str(), NULL, 2);
-    Serial.print(c);
-    text += c;
-  }
-  Serial.println();
-  return text;
-}
+char binaryToChar() {
+  String letter = binaryInput.substring(0, 8);    // get first 8 bits
+  char c = strtol(letter.c_str(), NULL, 2);      // convert binary string to char
+  return c;  
 
 void getInput() {
   while (true) {
@@ -77,8 +73,11 @@ void getInput() {
       if (lastByte == "00111110" || lastByte == "00000000") {
         break;
       }
+      text += binaryToChar();
+      binaryInput = "";
     }
   }
+  Serial.println();
 }
 
 boolean bitStart(){
@@ -97,30 +96,35 @@ String getBit(String input) {
   unsigned long start = millis();
   bool detected = false;
 
-  // Only check for the laser in the first fraction of recSpeed
-  while (millis() - start < recSpeed / 5) {
+  // Only check for laser flash in first portion of the bit window
+  while (millis() - start < recSpeed / 6) {
     if (analogRead(receiver) <= threshold) {
       detected = true;
       break;
     }
   }
 
-  // Wait out the rest of the bit interval
+  // Wait out the rest of the bit window
   while (millis() - start < recSpeed) {
-    // keep timing consistent
+    // Do nothing
   }
 
-  // Append bit
+  // Add new bit to the string
   String newBit = detected ? "1" : "0";
   String output = input + newBit;
 
-  // Format for printing
-  int length = output.length();
-  if (length % 8 == 0) {
-    Serial.println(output + " ");
-  } else {
-    Serial.println(output);
-  }
+  // Print the bit
+  Serial.print(newBit);
 
+  // After every 8 bits, print a space
+  if (output.length() % 8 == 0) {
+    Serial.print(" ");
+  }
+  spaceCount++;
+  if(spaceCount == 160){
+    Serial.println();
+    spaceCount == 0;
+  }
   return output;
 }
+
