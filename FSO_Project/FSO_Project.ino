@@ -1,36 +1,43 @@
+#include <Wire.h>
+
 const int sendSpeed = 50;
 const int transmitter = 2;
 long cycle = millis();
+
 void setup() {
   pinMode(LED_BUILTIN, OUTPUT); 
   pinMode(transmitter, OUTPUT);
+  Wire.begin(); // I2C Master
   Serial.begin(9600);
   while(!Serial);
   Serial.println();
   Serial.println("Enter a text message:");
-
 }
 
-
 void loop() {
-  // put your main code here, to run repeatedly:
   if(Serial.available()) {
     String inputText = Serial.readStringUntil('\n');
     Serial.print("Transmitting " + inputText + " to Binary...\nBinary Output: ");
     inputText = inputText + ">";
-    startBit();
+
+    // Send I2C start signal to receiver
+    Wire.beginTransmission(8);  // Address of slave
+    Wire.write('S');            // Command to start receiving
+    Wire.endTransmission();
+    delay(10);
+
+    startBit();  // Laser sync flash
     
     for(int i = 0; i < inputText.length(); i++){
       char c = inputText[i];
       sendBinary(c);
       Serial.print(" ");
-      }
+    }
+
     Serial.println("\n\n");
     Serial.println("Enter another text message:");
   }
 }
-
-
 
 void sendBinary(char c) {
   for(int i = 7; i >= 0; i--){
