@@ -150,7 +150,7 @@ String getBit(String input) {
 
   // Wait out the rest of the bit window
   while (millis() - cycle < recSpeed) {}
-
+  cycle = cycle  + recSpeed;
   bool detected = (lightDetectedCount > samples / 2);  // majority vote
 
   String newBit = detected ? "1" : "0";
@@ -168,6 +168,5 @@ String getBit(String input) {
     spaceCount = 0;  // reset counter!
   }
 
-  cycle = cycle  + recSpeed;
   return output;
 }
