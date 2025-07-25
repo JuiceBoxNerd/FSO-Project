@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include <Wire.h>
 
 const unsigned long bitDuration = 5000; // in microseconds (e.g. 5000 = 200 bits/sec)
@@ -10,10 +11,17 @@ const int transmitter = 2;
 const unsigned long bitDurationMicros = 50000;  // 50 ms per bit
 unsigned long cycleMicros = 0;
 >>>>>>> parent of 932450e (Revert)
+=======
+
+const int transmitter = 2;
+const unsigned long bitDurationMicros = 50000;  // 50 ms per bit
+unsigned long cycleMicros = 0;
+>>>>>>> parent of 932450e (Revert)
 
 void setup() {
   pinMode(transmitter, OUTPUT);
   digitalWrite(transmitter, LOW);
+<<<<<<< HEAD
 <<<<<<< HEAD
 
   Wire.begin(); // Master
@@ -26,10 +34,16 @@ void setup() {
   while (!Serial);
   Serial.println("Enter a text message:");
 >>>>>>> parent of 932450e (Revert)
+=======
+  Serial.begin(9600);
+  while (!Serial);
+  Serial.println("Enter a text message:");
+>>>>>>> parent of 932450e (Revert)
 }
 
 void loop() {
   if (Serial.available()) {
+<<<<<<< HEAD
 <<<<<<< HEAD
     String message = Serial.readStringUntil('\n');
     message += ">"; // Add end-of-message marker
@@ -125,6 +139,57 @@ void sendBit(int bitVal) {
 >>>>>>> Stashed changes
 }
 
+=======
+    String inputText = Serial.readStringUntil('\n');
+    inputText += '>';  // end marker
+    Serial.print("Transmitting: ");
+    Serial.println(inputText);
+    startBit();
+    cycleMicros = micros();
+
+    for (int i = 0; i < inputText.length(); i++) {
+      sendBinaryManchester(inputText[i]);
+      Serial.print(" ");
+    }
+    Serial.println("\nDone transmitting.\nEnter another text message:");
+  }
+}
+
+void sendManchesterBit(int bit) {
+  unsigned long halfBitDuration = bitDurationMicros / 2;
+
+  // For Manchester encoding:
+  // 0 bit = LOW then HIGH
+  // 1 bit = HIGH then LOW
+
+  if (bit == 0) {
+    digitalWrite(transmitter, LOW);
+    waitUntil(cycleMicros + halfBitDuration);
+    cycleMicros += halfBitDuration;
+
+    digitalWrite(transmitter, HIGH);
+    waitUntil(cycleMicros + halfBitDuration);
+    cycleMicros += halfBitDuration;
+  } else {
+    digitalWrite(transmitter, HIGH);
+    waitUntil(cycleMicros + halfBitDuration);
+    cycleMicros += halfBitDuration;
+
+    digitalWrite(transmitter, LOW);
+    waitUntil(cycleMicros + halfBitDuration);
+    cycleMicros += halfBitDuration;
+  }
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
+=======
+  cycle = cycle + sendSpeed;
+>>>>>>> Stashed changes
+=======
+  cycle = cycle + sendSpeed;
+>>>>>>> Stashed changes
+}
+
+>>>>>>> parent of 932450e (Revert)
 void sendBinaryManchester(char c) {
   for (int i = 7; i >= 0; i--) {
     int bit = (c >> i) & 1;
@@ -156,4 +221,7 @@ void startBit() {
 }
 
 
+<<<<<<< HEAD
+>>>>>>> parent of 932450e (Revert)
+=======
 >>>>>>> parent of 932450e (Revert)
