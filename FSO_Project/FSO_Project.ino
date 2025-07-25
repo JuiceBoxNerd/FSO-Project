@@ -53,6 +53,10 @@ void sendManchesterBit(int bit) {
     cycleMicros += halfBitDuration;
   }
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+=======
+  cycle = cycle + sendSpeed;
+>>>>>>> Stashed changes
 =======
   cycle = cycle + sendSpeed;
 >>>>>>> Stashed changes
