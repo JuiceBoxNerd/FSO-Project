@@ -97,5 +97,27 @@ String getBit() {
   while (micros() - cycle < bitDuration); // finish bit period
   cycle += bitDuration;
 
+<<<<<<< Updated upstream
   return (lightCount > samples / 2) ? "1" : "0";
+=======
+  bool detected = (lightDetectedCount > samples / 2);  // majority vote
+
+  String newBit = detected ? "1" : "0";
+  String output = input + newBit;
+
+  Serial.print(newBit);
+  if (output.length() % 8 == 0) {
+    Serial.print(" ");
+    spaceCount++;  // count *groups* of 8 bits
+  }
+
+  // After 20 groups (you can change this), print a newline and reset counter
+  if (spaceCount >= 20) {
+    Serial.println();
+    spaceCount = 0;  // reset counter!
+  }
+
+  cycle = cycle + 50;
+  return output;
+>>>>>>> Stashed changes
 }

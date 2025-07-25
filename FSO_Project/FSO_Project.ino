@@ -43,7 +43,15 @@ void sendByte(char c) {
     sendBit(bitVal);
     Serial.print(bitVal);
   }
+<<<<<<< Updated upstream
   Serial.print(" ");
+=======
+  else{
+    digitalWrite(transmitter, LOW);
+    while(millis()-cycle < sendSpeed);
+  }
+  cycle = cycle + sendSpeed;
+>>>>>>> Stashed changes
 }
 
 void sendBit(int bitVal) {
