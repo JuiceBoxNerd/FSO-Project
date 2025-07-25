@@ -26,6 +26,7 @@ void loop() {
     Serial.println("Receiving code...");
     getInput();
     Serial.println("Decoded word is " + text);
+    Serial.println();
   }
   binaryInput = "";
   text = "";
@@ -168,7 +169,7 @@ String getBit(String input) {
     spaceCount = 0;  // reset counter!
   }
 
-  cycle = millis();
+  cycle = cycle  + recSpeed;
   return output;
 }
 
