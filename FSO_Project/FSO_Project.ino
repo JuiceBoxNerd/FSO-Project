@@ -1,4 +1,3 @@
-@ -1,69 +1,69 @@
 
 const int sendSpeed = 50;
 const int transmitter = 2;
