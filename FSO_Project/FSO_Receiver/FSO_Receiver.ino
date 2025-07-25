@@ -141,7 +141,7 @@ boolean bitStart() {
     spaceCount = 0;  // reset counter!
   }
 
-  cycle = millis();
+  cycle = cycle + 50;
   return output;
 }
 */

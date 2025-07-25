@@ -52,6 +52,10 @@ void sendManchesterBit(int bit) {
     waitUntil(cycleMicros + halfBitDuration);
     cycleMicros += halfBitDuration;
   }
+<<<<<<< Updated upstream
+=======
+  cycle = cycle + sendSpeed;
+>>>>>>> Stashed changes
 }
 
 void sendBinaryManchester(char c) {
