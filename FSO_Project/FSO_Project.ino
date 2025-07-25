@@ -1,7 +1,7 @@
 
-const int sendSpeed = 50;
+const unsigned long sendSpeed = 50000; //microseconds
 const int transmitter = 2;
-long cycle = millis();
+unsigned long nextBitTime - 0;
 void setup() {
   pinMode(LED_BUILTIN, OUTPUT); 
   pinMode(transmitter, OUTPUT);
@@ -34,36 +34,40 @@ void loop() {
 
 
 void sendBinary(char c) {
-  for(int i = 7; i >= 0; i--){
-    if(c & (1 << i)){
-      Serial.print("1");
-      sendBit(1);
-    }
-    else{
-      Serial.print("0");
-      sendBit(0);
-    }
+  for (int i = 7; i >= 0; i--) {
+    bool bit = c & (1 << i);
+    Serial.print(bit ? "1" : "0");
+    sendBit(bit);
   }
 }
 
-void sendBit(int x){
-  if(x == 1){
-    digitalWrite(transmitter, HIGH);
-    while(millis()-cycle < sendSpeed);
+void sendBit(bool bit) {
+  digitalWrite(transmitter, bit ? HIGH : LOW);
+
+  // Wait until full bit interval has passed
+  unsigned long now = micros();
+  if (nextBitTime > now) {
+    delayMicroseconds(nextBitTime - now);
   }
-  else{
-    digitalWrite(transmitter, LOW);
-    while(millis()-cycle < sendSpeed);
-  }
-  cycle = millis();
+
+  // Schedule next bit
+  nextBitTime += sendSpeed;
 }
 
-void startBit(){
+
+void startBit() {
+  // Send a HIGH signal for 500 ms (sync pulse)
   digitalWrite(transmitter, HIGH);
-  delay(500);
+  unsigned long syncStart = micros();
+  while (micros() - syncStart < 500000) {
+    // wait for 500 ms
+  }
+
+  // Send a LOW signal for 500 ms (idle gap after sync)
   digitalWrite(transmitter, LOW);
-  delay(500);
-  cycle = millis();
-}
+  unsigned long gapStart = micros();
+  while (micros() - gapStart < 500000) {
+    // wait for another 500 ms
+  }
 
 
