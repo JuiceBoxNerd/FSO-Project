@@ -166,7 +166,7 @@ String getManchesterBit(String input) {
     // No valid Manchester transition detected - treat as error or repeat sampling
     Serial.print("?");  // For debug
     cycle += recSpeed;
-    return input;  // Skip adding bit
+    return input + "?";  // Skip adding bit
   }
 
   // Append new bit
