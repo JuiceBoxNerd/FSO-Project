@@ -51,6 +51,9 @@ void sendByte(char c) {
     while(millis()-cycle < sendSpeed);
   }
   cycle = cycle + sendSpeed;
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 }
 
