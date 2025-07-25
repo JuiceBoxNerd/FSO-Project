@@ -68,7 +68,7 @@ char binaryToChar(String byteStr) {
 
 void getInput() {
   while (true) {
-    binaryInput = getBit(binaryInput);
+    binaryInput = getManchesterBit(binaryInput);
 
     if (binaryInput.length() >= 8) {
       String currentByte = binaryInput.substring(0, 8);
@@ -101,7 +101,8 @@ boolean bitStart() {
       return false;  // light detected too early, abort
     }
   }
-
+  startMicros = micros();
+  while(micros()-startMicros == 500000UL + (recSpeed / 3));
   cycle = micros();  // sync for bit timing
   return true;
 }
@@ -109,7 +110,7 @@ boolean bitStart() {
 
 
 
-String getBit(String input) {
+/*String getBit(String input) {
   const int samples = 15;
   int lightDetectedCount = 0;
 
@@ -144,9 +145,9 @@ String getBit(String input) {
   cycle = cycle  + recSpeed;
   return output;
 }
+*/
 
-
-/*String getManchesterBit(String input) {
+String getManchesterBit(String input) {
   unsigned long halfBitDuration = recSpeed / 2;  // convert ms to us and half
 
   // Wait half bit interval, sample initial state
@@ -177,4 +178,3 @@ String getBit(String input) {
   cycle += recSpeed;
   return input;
 }
-*/
