@@ -26,7 +26,6 @@ void loop() {
     Serial.println("Receiving code...");
     getInput();
     Serial.println("Decoded word is " + text);
-    Serial.println();
   }
   binaryInput = "";
   text = "";
@@ -142,7 +141,7 @@ boolean bitStart() {
     spaceCount = 0;  // reset counter!
   }
 
-  cycle = cycle  + recSpeed;
+  cycle = millis();
   return output;
 }
 */
