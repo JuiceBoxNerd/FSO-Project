@@ -1,12 +1,12 @@
 
-const int recSpeed = 50;
+const unsigned long recSpeed = 50000UL; //50,000 microseconds
 const int receiver = A3;
 int threshold = 100;
 int bitCount = 0;
 String binaryInput = "";
 String text = "";
 int spaceCount = 0;
-long cycle = millis();
+unsigned long cycle = 0;
 
 void setup() {
   // put your setup code here, to run once:
@@ -70,75 +70,47 @@ void getInput() {
   while (true) {
     binaryInput = getBit(binaryInput);
 
-    if (binaryInput.length() % 8 == 0) {
-      String lastByte = binaryInput.substring(binaryInput.length() - 8);
-      if (lastByte == "00111110" || lastByte == "00000000") {
-        break;  // terminator found
+    if (binaryInput.length() >= 8) {
+      String currentByte = binaryInput.substring(0, 8);
+      binaryInput = binaryInput.substring(8);  // remove processed byte
+
+      if (currentByte == "00111110" || currentByte == "00000000") {
+        break;  // end of message
       }
 
-      // Decode current byte and append to text
-      String currentByte = binaryInput.substring(0, 8);
-      text += binaryToChar(currentByte);
-      binaryInput = "";
+      char decodedChar = binaryToChar(currentByte);
+      if (decodedChar >= 32 && decodedChar <= 126) {
+        text += decodedChar;
+      } else {
+        Serial.print(" [Invalid byte: ");
+        Serial.print(currentByte);
+        Serial.print("] ");
+      }
     }
   }
   Serial.println();
 }
 
-boolean bitStart(){
-  for(int i = 0; i < 50; i++){
-    if(analogRead(receiver) > threshold){
-      return false;
+boolean bitStart() {
+  unsigned long startMicros = micros();
+  int duration = 0;
+
+  // Wait for the line to be LOW for ~500ms total
+  while (micros() - startMicros < 500000UL){
+    if (analogRead(receiver) > threshold) {
+      return false;  // light detected too early, abort
     }
-    delay(10);
   }
-  delay(recSpeed/2 + 500);
-  cycle = millis();
+
+  cycle = micros();  // sync for bit timing
   return true;
 }
 
 
-/*String getBit(String input) {
-  unsigned long start = millis();
-  bool detected = false;
 
-  // Only check for laser flash in first portion of the bit window
-  while (millis() - start < recSpeed / 6) {
-    if (analogRead(receiver) <= threshold) {
-      detected = true;
-      break;
-    }
-  }
-
-  // Wait out the rest of the bit window
-  while (millis() - start < recSpeed) {
-    // Do nothing
-  }
-
-  // Add new bit to the string
-  String newBit = detected ? "1" : "0";
-  String output = input + newBit;
-  
-  
-  
-  Serial.print(newBit);
-  if (output.length() % 8 == 0) {
-    Serial.print(" ");
-  }
-  spaceCount++;
-
-  // After 160 spaces (~1280 bits), print newline and reset counter
-  if (spaceCount >= 160) {
-    Serial.println();
-    spaceCount = 0;
-  }
-
-  return output;
-}
-*/
 
 String getBit(String input) {
-  int samples = 10;
+  const int samples = 15;
   int lightDetectedCount = 0;
 
   // Sample multiple times during first part of bit window
@@ -150,7 +122,7 @@ String getBit(String input) {
   }
 
   // Wait out the rest of the bit window
-  while (millis() - cycle < recSpeed) {}
+  while (micros() - cycle < recSpeed) {}
 
   bool detected = (lightDetectedCount > samples / 2);  // majority vote
 
@@ -173,3 +145,36 @@ String getBit(String input) {
   return output;
 }
 
+
+/*String getManchesterBit(String input) {
+  unsigned long halfBitDuration = recSpeed / 2;  // convert ms to us and half
+
+  // Wait half bit interval, sample initial state
+  while (micros() < cycle + halfBitDuration) {}
+  int firstSample = analogRead(receiver) <= threshold ? LOW : HIGH;
+
+  // Wait another half bit interval, sample again
+  while (micros() < cycle + recSpeed) {}
+  int secondSample = analogRead(receiver) <= threshold ? LOW : HIGH;
+
+  // Decode based on transition
+  int bitValue;
+  if (firstSample == LOW && secondSample == HIGH) bitValue = 0;
+  else if (firstSample == HIGH && secondSample == LOW) bitValue = 1;
+  else {
+    // No valid Manchester transition detected - treat as error or repeat sampling
+    Serial.print("?");  // For debug
+    cycle += recSpeed;
+    return input;  // Skip adding bit
+  }
+
+  // Append new bit
+  input += String(bitValue);
+
+  Serial.print(bitValue);
+  if (input.length() % 8 == 0) Serial.print(" ");
+
+  cycle += recSpeed;
+  return input;
+}
+*/

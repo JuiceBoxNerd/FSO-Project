@@ -1,59 +1,72 @@
 
-const unsigned long sendSpeed = 50000; //microseconds
-const int transmitter = 2;
-unsigned long nextBitTime - 0;
+cconst int transmitter = 2;
+const unsigned long bitDurationMicros = 50000;  // 50 ms per bit
+unsigned long cycleMicros = 0;
+
 void setup() {
-  pinMode(LED_BUILTIN, OUTPUT); 
   pinMode(transmitter, OUTPUT);
+  digitalWrite(transmitter, LOW);
   Serial.begin(9600);
-  while(!Serial);
-  Serial.println();
+  while (!Serial);
   Serial.println("Enter a text message:");
-
 }
-
 
 void loop() {
-  // put your main code here, to run repeatedly:
-  if(Serial.available()) {
+  if (Serial.available()) {
     String inputText = Serial.readStringUntil('\n');
-    Serial.print("Transmitting " + inputText + " to Binary...\nBinary Output: ");
-    inputText = inputText + ">";
+    inputText += '>';  // end marker
+    Serial.print("Transmitting: ");
+    Serial.println(inputText);
     startBit();
-    
-    for(int i = 0; i < inputText.length(); i++){
-      char c = inputText[i];
-      sendBinary(c);
+    cycleMicros = micros();
+
+    for (int i = 0; i < inputText.length(); i++) {
+      sendBinaryManchester(inputText[i]);
       Serial.print(" ");
-      }
-    Serial.println("\n\n");
-    Serial.println("Enter another text message:");
+    }
+    Serial.println("\nDone transmitting.\nEnter another text message:");
   }
 }
 
+void sendManchesterBit(int bit) {
+  unsigned long halfBitDuration = bitDurationMicros / 2;
 
+  // For Manchester encoding:
+  // 0 bit = LOW then HIGH
+  // 1 bit = HIGH then LOW
 
-void sendBinary(char c) {
+  if (bit == 0) {
+    digitalWrite(transmitter, LOW);
+    waitUntil(cycleMicros + halfBitDuration);
+    cycleMicros += halfBitDuration;
+
+    digitalWrite(transmitter, HIGH);
+    waitUntil(cycleMicros + halfBitDuration);
+    cycleMicros += halfBitDuration;
+  } else {
+    digitalWrite(transmitter, HIGH);
+    waitUntil(cycleMicros + halfBitDuration);
+    cycleMicros += halfBitDuration;
+
+    digitalWrite(transmitter, LOW);
+    waitUntil(cycleMicros + halfBitDuration);
+    cycleMicros += halfBitDuration;
+  }
+}
+
+void sendBinaryManchester(char c) {
   for (int i = 7; i >= 0; i--) {
-    bool bit = c & (1 << i);
-    Serial.print(bit ? "1" : "0");
-    sendBit(bit);
+    int bit = (c >> i) & 1;
+    sendManchesterBit(bit);
+    Serial.print(bit);
   }
 }
 
-void sendBit(bool bit) {
-  digitalWrite(transmitter, bit ? HIGH : LOW);
-
-  // Wait until full bit interval has passed
-  unsigned long now = micros();
-  if (nextBitTime > now) {
-    delayMicroseconds(nextBitTime - now);
+void waitUntil(unsigned long targetMicros) {
+  while (micros() < targetMicros) {
+    // busy wait
   }
-
-  // Schedule next bit
-  nextBitTime += sendSpeed;
 }
-
 
 void startBit() {
   // Send a HIGH signal for 500 ms (sync pulse)
