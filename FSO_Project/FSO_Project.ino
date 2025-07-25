@@ -1,73 +1,53 @@
 #include <Wire.h>
 
-const int sendSpeed = 50;
+const unsigned long bitDuration = 5000; // in microseconds (e.g. 5000 = 200 bits/sec)
 const int transmitter = 2;
-long cycle = millis();
+unsigned long cycle = 0;
 
 void setup() {
-  pinMode(LED_BUILTIN, OUTPUT); 
   pinMode(transmitter, OUTPUT);
-  Wire.begin(); // I2C Master
+  digitalWrite(transmitter, LOW);
+
+  Wire.begin(); // Master
   Serial.begin(9600);
-  while(!Serial);
-  Serial.println();
-  Serial.println("Enter a text message:");
+  while (!Serial);
+
+  Serial.println("Enter a message to send:");
 }
 
 void loop() {
-  if(Serial.available()) {
-    String inputText = Serial.readStringUntil('\n');
-    Serial.print("Transmitting " + inputText + " to Binary...\nBinary Output: ");
-    inputText = inputText + ">";
+  if (Serial.available()) {
+    String message = Serial.readStringUntil('\n');
+    message += ">"; // Add end-of-message marker
 
-    // Send I2C start signal to receiver
-    Wire.beginTransmission(8);  // Address of slave
-    Wire.write('S');            // Command to start receiving
+    // Send start command to slave
+    Wire.beginTransmission(8);
+    Wire.write('S');
     Wire.endTransmission();
-    delay(10);
+    delay(10); // Give receiver time to prepare
 
-    startBit();  // Laser sync flash
-    
-    for(int i = 0; i < inputText.length(); i++){
-      char c = inputText[i];
-      sendBinary(c);
-      Serial.print(" ");
-    }
+    cycle = micros(); // sync timing
 
-    Serial.println("\n\n");
-    Serial.println("Enter another text message:");
-  }
-}
+    Serial.print("Sending: ");
+    Serial.println(message);
 
-void sendBinary(char c) {
-  for(int i = 7; i >= 0; i--){
-    if(c & (1 << i)){
-      Serial.print("1");
-      sendBit(1);
-    }
-    else{
-      Serial.print("0");
-      sendBit(0);
+    for (int i = 0; i < message.length(); i++) {
+      sendByte(message[i]);
     }
   }
 }
 
-void sendBit(int x){
-  if(x == 1){
-    digitalWrite(transmitter, HIGH);
-    while(millis()-cycle < sendSpeed);
+void sendByte(char c) {
+  for (int i = 7; i >= 0; i--) {
+    int bitVal = (c >> i) & 1;
+    sendBit(bitVal);
+    Serial.print(bitVal);
   }
-  else{
-    digitalWrite(transmitter, LOW);
-    while(millis()-cycle < sendSpeed);
-  }
-  cycle = cycle + sendSpeed;
+  Serial.print(" ");
 }
 
-void startBit(){
-  digitalWrite(transmitter, HIGH);
-  delay(500);
-  digitalWrite(transmitter, LOW);
-  delay(500);
-  cycle = millis();
+void sendBit(int bitVal) {
+  digitalWrite(transmitter, bitVal ? HIGH : LOW);
+  while (micros() - cycle < bitDuration); // wait for duration
+  cycle += bitDuration; // next cycle start
 }
