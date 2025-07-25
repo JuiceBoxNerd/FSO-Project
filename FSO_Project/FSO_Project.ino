@@ -1,5 +1,5 @@
 
-cconst int transmitter = 2;
+const int transmitter = 2;
 const unsigned long bitDurationMicros = 50000;  // 50 ms per bit
 unsigned long cycleMicros = 0;
 
@@ -82,5 +82,6 @@ void startBit() {
   while (micros() - gapStart < 500000) {
     // wait for another 500 ms
   }
+}
 
 
