@@ -8,10 +8,11 @@ String binaryInput = "";
 String text = "";
 int spaceCount = 0;
 long cycle = millis();
+void receiveEvent(int howMany){}
 
 void setup() {
   Wire.begin(4);
-  Wire.onReceive(startSignal());
+  Wire.onReceive(startSignal(receiveEvent));
   // put your setup code here, to run once:
   pinMode(receiver, INPUT);
 
@@ -89,7 +90,7 @@ void getInput() {
   Serial.println();
 }
 
-void startSignal(int howMany){
+void startSignal(howMany){
   while(Wire.available()){
     char cmd = Wire.read();
     if(cmd == "s"){
