@@ -57,10 +57,10 @@ void sendBit(int x){
 
 void startSignal(){
   Wire.beginTransmission(4);
-  Wire.write("s");
+  Wire.write('S');
   Wire.endTransmission();
   delay(500);
-
+  cycle = millis();
 }
 /*void startBit(){
   digitalWrite(transmitter, HIGH);
