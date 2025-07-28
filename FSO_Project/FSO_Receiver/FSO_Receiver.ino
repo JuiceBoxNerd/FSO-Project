@@ -212,6 +212,10 @@ String getBit(String input) {
   }
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+=======
+  cycle = cycle + recSpeed;
+>>>>>>> Stashed changes
 =======
   cycle = cycle + recSpeed;
 >>>>>>> Stashed changes

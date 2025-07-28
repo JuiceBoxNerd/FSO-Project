@@ -81,6 +81,10 @@ void startSignal(){
   Wire.beginTransmission(4);
   Wire.write('S');
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+=======
+  delay(500);
+>>>>>>> Stashed changes
 =======
   delay(500);
 >>>>>>> Stashed changes
