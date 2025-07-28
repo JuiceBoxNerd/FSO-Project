@@ -8,11 +8,11 @@ String binaryInput = "";
 String text = "";
 int spaceCount = 0;
 long cycle = millis();
-void receiveEvent(int howMany){}
+void receiveEvent(int howMany);
 
 void setup() {
   Wire.begin(4);
-  Wire.onReceive(startSignal(receiveEvent));
+  Wire.onReceive(receiveEvent);
   // put your setup code here, to run once:
   pinMode(receiver, INPUT);
 
@@ -26,7 +26,7 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
 
-  if(startReceiving){
+  if(startSignal()){
     Serial.println("Receiving code...");
     getInput();
     Serial.println("Decoded word is " + text);
@@ -90,16 +90,27 @@ void getInput() {
   Serial.println();
 }
 
-void startSignal(howMany){
+void receiveEvent(int howMany){
   while(Wire.available()){
     char cmd = Wire.read();
-    if(cmd == "s"){
-      delay(recSpeed/2 + 500)
+    if(cmd == 's' || cmd == 'S'){
+      delay(recSpeed/2 + 500);
       startReceiving = true;
     }
   }
 
 }
+
+boolean startSignal() {
+  if (!startReceiving) return false;
+
+  // mimic old timing: delay for 500ms of "dark", then sync
+
+  delay(recSpeed / 2 + 500); // match previous timing
+  cycle = millis();
+  return true;
+}
+
 /*boolean bitStart(){
   for(int i = 0; i < 50; i++){
     if(analogRead(receiver) > threshold){
@@ -112,6 +123,7 @@ void startSignal(howMany){
   return true;
 }
 */
+
 
 /*String getBit(String input) {
   unsigned long start = millis();
@@ -152,6 +164,9 @@ void startSignal(howMany){
 }
 */
 
+const int RESYNC_INTERVAL = 64;  // Number of bits after which resync is expected
+int bitsSinceLastResync = 0;
+
 String getBit(String input) {
   int samples = 10;
   int lightDetectedCount = 0;
@@ -172,17 +187,33 @@ String getBit(String input) {
   String newBit = detected ? "1" : "0";
   String output = input + newBit;
 
+  bitsSinceLastResync++;
+
+  // Check for resync pattern (for example: a single '1' bit as resync every 64 bits)
+  if (bitsSinceLastResync >= RESYNC_INTERVAL) {
+    // If this bit is '1', reset timing to resync
+    if (detected) {
+      cycle = millis();  // Resync timing to current time
+      Serial.println("\n*** Resync performed ***\n");
+    }
+    bitsSinceLastResync = 0;  // Reset counter regardless
+  }
+
   Serial.print(newBit);
   if (output.length() % 8 == 0) {
     Serial.print(" ");
     spaceCount++;  // count *groups* of 8 bits
   }
 
-  // After 20 groups (you can change this), print a newline and reset counter
+  // After 20 groups, print a newline and reset counter
   if (spaceCount >= 20) {
     Serial.println();
     spaceCount = 0;  // reset counter!
   }
 
+<<<<<<< Updated upstream
+=======
+  cycle = cycle + recSpeed;
+>>>>>>> Stashed changes
   return output;
 }
