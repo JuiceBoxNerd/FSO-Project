@@ -1,3 +1,5 @@
+#include <Wire.h>
+volatile bool startReceiving = false;
 const int recSpeed = 50;
 const int receiver = A3;
 int threshold = 100;
@@ -6,8 +8,11 @@ String binaryInput = "";
 String text = "";
 int spaceCount = 0;
 long cycle = millis();
+void receiveEvent(int howMany){}
 
 void setup() {
+  Wire.begin(4);
+  Wire.onReceive(startSignal(receiveEvent));
   // put your setup code here, to run once:
   pinMode(receiver, INPUT);
 
@@ -21,11 +26,12 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
 
-  if(bitStart()){
+  if(startReceiving){
     Serial.println("Receiving code...");
     getInput();
     Serial.println("Decoded word is " + text);
     Serial.println();
+    startReceiving = false;
   }
   binaryInput = "";
   text = "";
@@ -84,7 +90,17 @@ void getInput() {
   Serial.println();
 }
 
-boolean bitStart(){
+void startSignal(howMany){
+  while(Wire.available()){
+    char cmd = Wire.read();
+    if(cmd == "s"){
+      delay(recSpeed/2 + 500)
+      startReceiving = true;
+    }
+  }
+
+}
+/*boolean bitStart(){
   for(int i = 0; i < 50; i++){
     if(analogRead(receiver) > threshold){
       return false;
@@ -95,7 +111,7 @@ boolean bitStart(){
   cycle = millis();
   return true;
 }
-
+*/
 
 /*String getBit(String input) {
   unsigned long start = millis();

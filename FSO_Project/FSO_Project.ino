@@ -1,9 +1,10 @@
-
+#include <Wire.h>
 const int sendSpeed = 50;
 const int transmitter = 2;
 
 long cycle = millis();
 void setup() {
+  Wire.begin();
   pinMode(LED_BUILTIN, OUTPUT); 
   pinMode(transmitter, OUTPUT);
   Serial.begin(9600);
@@ -20,7 +21,8 @@ void loop() {
     String inputText = Serial.readStringUntil('\n');
     Serial.print("Transmitting " + inputText + " to Binary...\nBinary Output: ");
     inputText = inputText + ">";
-    startBit();
+    //startBit();
+    startSignal();
     
     for(int i = 0; i < inputText.length(); i++){
       char c = inputText[i];
@@ -53,11 +55,18 @@ void sendBit(int x){
   cycle += sendSpeed;
 }
 
-void startBit(){
+void startSignal(){
+  Wire.beginTransmission(4);
+  Wire.write("s");
+  Wire.endTransmission();
+  delay(500);
+
+}
+/*void startBit(){
   digitalWrite(transmitter, HIGH);
   delay(500);
   digitalWrite(transmitter, LOW);
   delay(500);
   cycle = millis();
 }
-
+*/
