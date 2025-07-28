@@ -60,11 +60,6 @@ void sendResyncBit() {
 }
 
 void sendBit(int x){
-<<<<<<< Updated upstream
-  digitalWrite(transmitter, x ? HIGH:LOW);
-  while(millis()-cycle < sendSpeed);
-  cycle += sendSpeed;
-=======
   if(x == 1){
     digitalWrite(transmitter, HIGH);
     while(millis()-cycle < sendSpeed);
@@ -74,20 +69,12 @@ void sendBit(int x){
     while(millis()-cycle < sendSpeed);
   }
   cycle = millis();
->>>>>>> Stashed changes
 }
 
 void startSignal(){
   Wire.beginTransmission(4);
   Wire.write('S');
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-=======
   delay(500);
->>>>>>> Stashed changes
-=======
-  delay(500);
->>>>>>> Stashed changes
   Wire.endTransmission();
   delay(500);
   cycle = millis();
