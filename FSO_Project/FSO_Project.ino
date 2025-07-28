@@ -4,7 +4,7 @@ const int transmitter = 2;
 
 long cycle = millis();
 int bitsSentSinceResync = 0;
-const int RESYNC_INTERVAL = 64;  // Resync every 64 bits
+const int RESYNC_INTERVAL = 128;  // Resync every 64 bits
 const byte SYNC_BYTE = 0b11111110;
 
 void setup() {

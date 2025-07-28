@@ -57,6 +57,7 @@ char binaryToChar(String byteStr) {
 }
 
 void getInput() {
+  int stopCount = 0;
   while (true) {
     binaryInput = getBit(binaryInput);
 
@@ -70,10 +71,15 @@ void getInput() {
         continue;
       }
 
-      if (byteCandidate == "00111110" || byteCandidate == "00000000") {
+      if (byteCandidate == "00111110"){
         break;  // Terminator received
       }
-
+      else if(byteCandidate == "00000000"){
+        stopCount++;
+      }
+      if(stopCount >= 20){
+        break;
+      }
       char decodedChar = binaryToChar(byteCandidate);
       text += decodedChar;
       binaryInput = binaryInput.substring(8);
