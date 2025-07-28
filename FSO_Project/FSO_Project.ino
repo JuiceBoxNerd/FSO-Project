@@ -48,16 +48,9 @@ void sendBinary(char c) {
 }
 
 void sendBit(int x){
-  if(x == 1){
-    digitalWrite(transmitter, HIGH);
-    while(millis()-cycle < sendSpeed);
-  }
-  else{
-    digitalWrite(transmitter, LOW);
-    while(millis()-cycle < sendSpeed);
-  }
-  
-  cycle = millis();
+  digitalWrite(transmitter, x ? HIGH:LOW);
+  while(millis()-cycle < sendSpeed);
+  cycle += sendSpeed;
 }
 
 void startBit(){

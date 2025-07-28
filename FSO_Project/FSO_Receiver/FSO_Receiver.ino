@@ -91,7 +91,7 @@ boolean bitStart(){
     }
     delay(10);
   }
-  delay(recSpeed/2 + 500);
+  delay(recSpeed/5 + 500);
   cycle = millis();
   return true;
 }
@@ -145,12 +145,12 @@ String getBit(String input) {
     if (analogRead(receiver) <= threshold) {
       lightDetectedCount++;
     }
-    delay((recSpeed / 12) / samples);  // spread samples evenly
+    delay((recSpeed / 5) / samples);  // spread samples evenly
   }
 
   // Wait out the rest of the bit window
-  while (millis() - cycle < recSpeed) {}
-
+  while (millis() - cycle < recSpeed);
+  cycle += recSpeed;
   bool detected = (lightDetectedCount > samples / 2);  // majority vote
 
   String newBit = detected ? "1" : "0";
@@ -168,6 +168,5 @@ String getBit(String input) {
     spaceCount = 0;  // reset counter!
   }
 
-  cycle = cycle  + recSpeed;
   return output;
 }
