@@ -72,8 +72,8 @@ void sendResyncSignal() {
 void startSignal() {
   Wire.beginTransmission(4);
   Wire.write('S');
-  delay(500);
+  delay(25);
   Wire.endTransmission();
-  delay(500);
+  delay(25);
   cycle = micros();
 }
