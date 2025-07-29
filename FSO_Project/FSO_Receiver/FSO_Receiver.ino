@@ -9,9 +9,6 @@ String text = "";
 int spaceCount = 0;
 long cycle = millis();
 
-const int SYNC_WINDOW = 8;
-const String SYNC_PATTERN = "11111110";
-
 void setup() {
   Wire.begin(4);
   Wire.onReceive(receiveEvent);
@@ -41,8 +38,7 @@ int initializer() {
   int count = 0;
 
   while (millis() - start < 1000) {
-    int reading = analogRead(receiver);
-    total += reading;
+    total += analogRead(receiver);
     count++;
   }
 
@@ -64,22 +60,16 @@ void getInput() {
     if (binaryInput.length() >= 8) {
       String byteCandidate = binaryInput.substring(0, 8);
 
-      if (byteCandidate == SYNC_PATTERN) {
-        Serial.println("\n*** Resync performed ***\n");
-        binaryInput = "";  // Clear and wait for real data
-        cycle = millis();
-        continue;
-      }
-
-      if (byteCandidate == "00111110"){
-        break;  // Terminator received
+      if (byteCandidate == "00111110"){  // '>'
+        break;
       }
       else if(byteCandidate == "00000000"){
         stopCount++;
+        if(stopCount >= 20){
+          break;
+        }
       }
-      if(stopCount >= 20){
-        break;
-      }
+
       char decodedChar = binaryToChar(byteCandidate);
       text += decodedChar;
       binaryInput = binaryInput.substring(8);
@@ -94,6 +84,9 @@ void receiveEvent(int howMany) {
     if (cmd == 's' || cmd == 'S') {
       delay(recSpeed / 2 + 500);
       startReceiving = true;
+    } else if (cmd == 'R') {
+      cycle = millis();
+      Serial.println("\n*** Resync performed (I2C) ***\n");
     }
   }
 }
