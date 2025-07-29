@@ -47,8 +47,9 @@ void sendBinary(char c) {
 void sendResyncSignal() {
   Wire.beginTransmission(4);
   Wire.write('R');  // Signal resync
+  cycle = millis();
   Wire.endTransmission();
-  delay(10);  // Short buffer to allow handling
+  //delay(10);  // Short buffer to allow handling
   Serial.print("[SYNC]");
 }
 
