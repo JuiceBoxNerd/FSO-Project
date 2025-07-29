@@ -1,7 +1,6 @@
 #include <Wire.h>
 volatile bool startReceiving = false;
 volatile bool resyncRequested = false;
-volatile bool gettingBit = false;
 const int recSpeed = 10;
 const int receiver = 2;
 int threshold = 100;
@@ -100,15 +99,20 @@ boolean startSignal() {
 
 String getBit(String input) {
   if (resyncRequested) {
-    while(gettingBit);
-    cycle = millis();  // Safe to reset here
+    if(millis()-cycle > sendSpeed/2){
+     bool bit = lightDetected > (samples / 2);
+     String newBit = bit ? "1" : "0";
+     String output = input + newBit;
+     Serial.print(newBit);
+     spaceCount++;
+    }
+    cycle = millis();
     Serial.println("\n*** Resync performed (I2C) ***\n");
     resyncRequested = false;
   }
 
   int samples = 10;
   int lightDetected = 0;
-  gettingBit = true;
   for (int i = 0; i < samples; i++) {
     if (!digitalRead(receiver)) {
       lightDetected++;
@@ -116,7 +120,6 @@ String getBit(String input) {
     delay((recSpeed / 6) / samples);
   }
   while (millis() - cycle < recSpeed) {}
-  gettingBit = false;
   cycle += recSpeed;
 
   bool bit = lightDetected > (samples / 2);
