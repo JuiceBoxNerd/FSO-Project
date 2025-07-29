@@ -1,6 +1,5 @@
 #include <Wire.h>
 volatile bool startReceiving = false;
-volatile bool resyncRequested = false;
 const int recSpeed = 10000; // microseconds-based speed
 const int receiver = 2;
 int bitCount = 0;
@@ -52,80 +51,4 @@ void getInput() {
 
       char decodedChar = binaryToChar(byteCandidate);
       text += decodedChar;
-      binaryInput = binaryInput.substring(8);
-    }
-  }
-  Serial.println();
-}
-
-void receiveEvent(int howMany) {
-  while (Wire.available()) {
-    char cmd = Wire.read();
-    if (cmd == 'S' || cmd == 's') {
-      delayMicroseconds(recSpeed / 6);
-      delay(500);
-      startReceiving = true;
-    } else if (cmd == 'R') {
-      resyncRequested = true;
-    }
-  }
-}
-
-boolean startSignal() {
-  if (!startReceiving) return false;
-  delayMicroseconds(recSpeed / 6);
-  delay(500);
-  cycle = micros();
-  return true;
-}
-
-String getBit(String input) {
-  if (resyncRequested) {
-    if (micros() - cycle > recSpeed/2) { // equivalent to sendSpeed/2 in microseconds
-      int samples = 10;
-      int lightDetected = 0;
-      for (int i = 0; i < samples; i++) {
-        if (!digitalRead(receiver)) {
-          lightDetected++;
-        }
-        delayMicroseconds((recSpeed/6) / samples);
-      }
-
-      bool bit = lightDetected > (samples / 2);
-      String newBit = bit ? "1" : "0";
-      String output = input + newBit;
-      Serial.print(newBit);
-      spaceCount++;
-      cycle = micros();
-      Serial.println("\n*** Resync performed (I2C) ***\n");
-      resyncRequested = false;
-      return output;
-    }
-  }
-
-  int samples = 10;
-  int lightDetected = 0;
-  for (int i = 0; i < samples; i++) {
-    if (!digitalRead(receiver)) {
-      lightDetected++;
-    }
-    delayMicroseconds((recSpeed / 6) / samples);
-  }
-
-  while (micros() - cycle < recSpeed) {}
-  cycle += recSpeed;
-
-  bool bit = lightDetected > (samples / 2);
-  String newBit = bit ? "1" : "0";
-  String output = input + newBit;
-
-  Serial.print(newBit);
-  spaceCount++;
-  if (spaceCount % 8 == 0) Serial.print(" ");
-  if (spaceCount >= 160) {
-    Serial.println();
-    spaceCount = 0;
-  }
-
-  return output;
-}
+      binaryInput = binaryIn
