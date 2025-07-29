@@ -1,16 +1,15 @@
 #include <Wire.h>
-
 volatile bool startReceiving = false;
 volatile bool resyncRequested = false;
 
-const int recSpeed = 50000;  // 50ms per bit (in microseconds)
+const int recSpeed = 50;
 const int receiver = A3;
 int threshold = 100;
-
+int bitCount = 0;
 String binaryInput = "";
 String text = "";
 int spaceCount = 0;
-unsigned long cycle = micros();
+long cycle = millis();
 
 void setup() {
   Wire.begin(4);
@@ -18,15 +17,17 @@ void setup() {
   pinMode(receiver, INPUT);
   Serial.begin(9600);
   while (!Serial);
-  delay(200);
+  delay(500);
   threshold = initializer();
+  Serial.println();
 }
 
 void loop() {
   if (startSignal()) {
     Serial.println("Receiving code...");
     getInput();
-    Serial.println("Decoded word is " + text + "\n");
+    Serial.println("Decoded word is " + text);
+    Serial.println();
     startReceiving = false;
   }
   binaryInput = "";
@@ -38,15 +39,16 @@ int initializer() {
   long total = 0;
   int count = 0;
 
-  while (millis() - start < 500) {
-    total += analogRead(receiver);
+  while (millis() - start < 1000) {
+    int reading = analogRead(receiver);
+    total += reading;
     count++;
   }
 
-  int avg = total / count;
-  Serial.print("Threshold: ");
-  Serial.println(avg - 400);
-  return avg - 400;
+  int average = total / count;
+  Serial.print("Final Threshold: ");
+  Serial.println(average - 400);
+  return average - 400;
 }
 
 char binaryToChar(String byteStr) {
@@ -55,32 +57,33 @@ char binaryToChar(String byteStr) {
 
 void getInput() {
   int stopCount = 0;
-
   while (true) {
     binaryInput = getBit(binaryInput);
 
     if (binaryInput.length() >= 8) {
-      String byteStr = binaryInput.substring(0, 8);
+      String byteCandidate = binaryInput.substring(0, 8);
 
-      if (byteStr == "00111110") break;  // '>' terminator
-      if (byteStr == "00000000") {
+      if (byteCandidate == "00111110") break; // '>' terminator
+      if (byteCandidate == "00000000") {
         stopCount++;
         if (stopCount >= 20) break;
       } else {
         stopCount = 0;
       }
 
-      text += binaryToChar(byteStr);
+      char decodedChar = binaryToChar(byteCandidate);
+      text += decodedChar;
       binaryInput = binaryInput.substring(8);
     }
   }
+  Serial.println();
 }
 
 void receiveEvent(int howMany) {
   while (Wire.available()) {
     char cmd = Wire.read();
     if (cmd == 'S' || cmd == 's') {
-      delayMicroseconds(recSpeed / 2);
+      delay(recSpeed / 2 + 500);
       startReceiving = true;
     } else if (cmd == 'R') {
       resyncRequested = true;
@@ -88,17 +91,17 @@ void receiveEvent(int howMany) {
   }
 }
 
-bool startSignal() {
+boolean startSignal() {
   if (!startReceiving) return false;
-  delayMicroseconds(recSpeed / 2);
-  cycle = micros();
+  delay(recSpeed / 2 + 500);
+  cycle = millis();
   return true;
 }
 
 String getBit(String input) {
   if (resyncRequested) {
-    cycle = micros();
-    Serial.println("\n*** Resync Performed (I2C) ***\n");
+    cycle = millis();  // Safe to reset here
+    Serial.println("\n*** Resync performed (I2C) ***\n");
     resyncRequested = false;
   }
 
@@ -106,14 +109,16 @@ String getBit(String input) {
   int lightDetected = 0;
 
   for (int i = 0; i < samples; i++) {
-    if (analogRead(receiver) <= threshold) lightDetected++;
-    delayMicroseconds((recSpeed / 2) / samples);
+    if (analogRead(receiver) <= threshold) {
+      lightDetected++;
+    }
+    delay((recSpeed / 12) / samples);
   }
 
-  while (micros() - cycle < recSpeed);
+  while (millis() - cycle < recSpeed) {}
   cycle += recSpeed;
 
-  bool bit = (lightDetected > samples / 2);
+  bool bit = lightDetected > (samples / 2);
   String newBit = bit ? "1" : "0";
   String output = input + newBit;
 
