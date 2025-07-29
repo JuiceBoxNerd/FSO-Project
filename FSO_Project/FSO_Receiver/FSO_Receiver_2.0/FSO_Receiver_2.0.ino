@@ -77,7 +77,7 @@ void receiveEvent(int howMany) {
     char cmd = Wire.read();
     if (cmd == 'S') {
       delayMicroseconds(recSpeed / 6);
-      delay(500);
+      delay(25);
       startReceiving = true;
     } else if (cmd == 'R') {
       resyncRequested = true;
@@ -88,7 +88,7 @@ void receiveEvent(int howMany) {
 boolean startSignal() {
   if (!startReceiving) return false;
   delayMicroseconds(recSpeed / 6);
-  delay(500);
+  delay(25);
   cycle = micros();
   return true;
 }
