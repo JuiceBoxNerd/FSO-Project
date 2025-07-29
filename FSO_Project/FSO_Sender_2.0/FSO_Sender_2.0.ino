@@ -48,7 +48,7 @@ void sendResyncSignal() {
   Wire.beginTransmission(4);
   Wire.write('R');  // Signal resync
   Wire.endTransmission();
-  delay(sendSpeed/6);  // Short buffer to allow handling
+  delayMicroseconds(sendSpeed/6);  // Short buffer to allow handling
   Serial.print("[SYNC]");
 }
 
