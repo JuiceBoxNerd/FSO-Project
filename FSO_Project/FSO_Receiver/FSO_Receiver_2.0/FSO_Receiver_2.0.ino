@@ -2,7 +2,7 @@
 volatile bool startReceiving = false;
 volatile bool resyncRequested = false;
 
-const int recSpeed = 50000;  // 50ms in micros
+const int recSpeed = 10000;  // 50ms in micros
 const int receiver = A3;
 int threshold = 100;
 int bitCount = 0;
@@ -87,6 +87,7 @@ void receiveEvent(int howMany) {
       delay(500);
       startReceiving = true;
     } else if (cmd == 'R') {
+      delayMicroseconds(recSpeed/3);
       resyncRequested = true;
     }
   }
@@ -103,7 +104,6 @@ boolean startSignal() {
 String getBit(String input) {
   if (resyncRequested) {
     cycle = micros();  // Reset on resync
-    delayMicroseconds(recSpeed/2)
     Serial.println("\n*** Resync performed (I2C) ***\n");
     resyncRequested = false;
   }

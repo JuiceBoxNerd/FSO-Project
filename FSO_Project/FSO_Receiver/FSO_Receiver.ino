@@ -2,8 +2,8 @@
 volatile bool startReceiving = false;
 volatile bool resyncRequested = false;
 
-const int recSpeed = 25;
-const int receiver = A3;
+const int recSpeed = 10;
+const int receiver = 2;
 int threshold = 100;
 int bitCount = 0;
 String binaryInput = "";
@@ -40,7 +40,7 @@ int initializer() {
   int count = 0;
 
   while (millis() - start < 1000) {
-    int reading = analogRead(receiver);
+    int reading = digitalRead(receiver);
     total += reading;
     count++;
   }
@@ -83,7 +83,7 @@ void receiveEvent(int howMany) {
   while (Wire.available()) {
     char cmd = Wire.read();
     if (cmd == 'S' || cmd == 's') {
-      delay(recSpeed / 2 + 500);
+      delay(recSpeed / 3 + 500);
       startReceiving = true;
     } else if (cmd == 'R') {
       resyncRequested = true;
@@ -109,10 +109,10 @@ String getBit(String input) {
   int lightDetected = 0;
 
   for (int i = 0; i < samples; i++) {
-    if (analogRead(receiver) <= threshold) {
+    if (!digitalRead(receiver)) {
       lightDetected++;
     }
-    delay((recSpeed / 12) / samples);
+    delay((recSpeed / 6) / samples);
   }
 
   while (millis() - cycle < recSpeed) {}
