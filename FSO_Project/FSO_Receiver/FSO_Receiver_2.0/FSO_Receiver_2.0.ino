@@ -103,7 +103,7 @@ boolean startSignal() {
 String getBit(String input) {
   if (resyncRequested) {
     cycle = micros();  // Reset on resync
-    delay(recSpeed/2)
+    delayMicroseconds(recSpeed/2)
     Serial.println("\n*** Resync performed (I2C) ***\n");
     resyncRequested = false;
   }
