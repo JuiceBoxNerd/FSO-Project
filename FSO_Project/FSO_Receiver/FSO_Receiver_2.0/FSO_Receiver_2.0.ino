@@ -1,7 +1,11 @@
 #include <Wire.h>
 
 const int receiver = A3;
+<<<<<<< HEAD
 const int recSpeed = 5000; // 50 ms in micros
+=======
+const int recSpeed = 25000; // 50 ms in micros
+>>>>>>> 48a37a56c6ead24f2d00deee78657c7fe0ce0595
 int threshold = 100;
 volatile bool startReceiving = false;
 
