@@ -1,15 +1,14 @@
 #include <Wire.h>
-
-const int sendSpeed = 5000;  // 50 ms in micros
+const int sendSpeed = 25000;  // 25ms in micros
 const int transmitter = 2;
 
 unsigned long cycle = micros();
 int bitsSentSinceResync = 0;
-const int RESYNC_INTERVAL = 64;  // Resync every 128 bits
+const int RESYNC_INTERVAL = 64;  // Resync every 64 bits
 
 void setup() {
   Wire.begin();
-  pinMode(LED_BUILTIN, OUTPUT);
+  pinMode(LED_BUILTIN, OUTPUT); 
   pinMode(transmitter, OUTPUT);
   Serial.begin(9600);
   while (!Serial);
@@ -49,13 +48,13 @@ void sendResyncSignal() {
   Wire.beginTransmission(4);
   Wire.write('R');  // Signal resync
   Wire.endTransmission();
-  delayMicroseconds(1000);  // Short buffer to allow handling
+  delay(sendSpeed/6);  // Short buffer to allow handling
   Serial.print("[SYNC]");
 }
 
 void sendBit(int x) {
   digitalWrite(transmitter, x ? HIGH : LOW);
-  while (micros() - cycle < sendSpeed);  // microsecond-based delay
+  while (micros() - cycle < sendSpeed);
   cycle += sendSpeed;
   Serial.print(x);
 }
@@ -63,8 +62,8 @@ void sendBit(int x) {
 void startSignal() {
   Wire.beginTransmission(4);
   Wire.write('S');
-  //delay(500);  // Keep in milliseconds for compatibility with Wire/I2C
+  delay(500);  // Still in ms due to I2C timing
   Wire.endTransmission();
-  //delay(500);  // Keep in milliseconds for compatibility
-  cycle = micros();  // Reset the cycle timer using micros
+  delay(500);  // Still in ms
+  cycle = micros();  // micros-based cycle timer
 }
