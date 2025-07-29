@@ -1,18 +1,21 @@
 #include <Wire.h>
 
-const int sendSpeed = 10000; // microseconds per bit
+const int sendSpeed = 10000; // microseconds
 const int transmitter = 2;
-unsigned long cycle = micros();
+const int RESYNC_INTERVAL = 64;
+const int chunkSize = 8;
 
-const int chunkSize = 8; // You can change this to split message differently
+unsigned long cycle = micros();
+int bitsSentSinceResync = 0;
 
 void setup() {
   Wire.begin();
-  pinMode(LED_BUILTIN, OUTPUT);
+  pinMode(LED_BUILTIN, OUTPUT); 
   pinMode(transmitter, OUTPUT);
   Serial.begin(9600);
   while (!Serial);
   Serial.println("Enter a text message:");
+  bitsSentSinceResync = 0;
 }
 
 void loop() {
@@ -20,20 +23,19 @@ void loop() {
     String inputText = Serial.readStringUntil('\n');
     Serial.print("Transmitting: " + inputText + "\nBinary Output:\n");
 
-    // Break input into chunks of `chunkSize`
+    // Add "~*" as terminator
+    inputText += "~*";
+
     for (int start = 0; start < inputText.length(); start += chunkSize) {
       String chunk = inputText.substring(start, start + chunkSize);
-      chunk += ">"; // Terminator
+      chunk += ">";  // Add '>' as end-of-chunk
 
-      startSignal(); // Treat each chunk as a new message
-
+      startSignal();
       for (int i = 0; i < chunk.length(); i++) {
-        char c = chunk[i];
-        sendBinary(c);
+        sendBinary(chunk[i]);
         Serial.print(" ");
       }
-
-      Serial.println(); // Spacing between chunks
+      Serial.println();
     }
 
     Serial.println("\nEnter another text message:");
@@ -42,7 +44,13 @@ void loop() {
 
 void sendBinary(char c) {
   for (int i = 7; i >= 0; i--) {
+    if (bitsSentSinceResync >= RESYNC_INTERVAL) {
+      sendResyncSignal();
+      bitsSentSinceResync = 0;
+    }
+
     sendBit((c >> i) & 1);
+    bitsSentSinceResync++;
   }
 }
 
@@ -53,11 +61,19 @@ void sendBit(int x) {
   Serial.print(x);
 }
 
+void sendResyncSignal() {
+  Wire.beginTransmission(4);
+  Wire.write('R');
+  cycle = micros();
+  Wire.endTransmission();
+  Serial.print("[SYNC]");
+}
+
 void startSignal() {
   Wire.beginTransmission(4);
   Wire.write('S');
-  delay(500); // Give the receiver time to get ready
+  delay(500);
   Wire.endTransmission();
-  delay(500); // Allow setup before transmission
-  cycle = micros(); // Reset timing cycle
+  delay(500);
+  cycle = micros();
 }

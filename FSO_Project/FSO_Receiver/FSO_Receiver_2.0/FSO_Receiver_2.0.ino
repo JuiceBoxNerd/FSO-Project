@@ -1,10 +1,15 @@
 #include <Wire.h>
+
 volatile bool startReceiving = false;
-const int recSpeed = 10000; // microseconds-based speed
+volatile bool resyncRequested = false;
+
+const int recSpeed = 10000;
 const int receiver = 2;
-int bitCount = 0;
+
 String binaryInput = "";
-String text = "";
+String currentChunk = "";
+String fullMessage = "";
+
 int spaceCount = 0;
 unsigned long cycle = micros();
 
@@ -14,19 +19,29 @@ void setup() {
   pinMode(receiver, INPUT);
   Serial.begin(9600);
   while (!Serial);
-  Serial.println();
+  Serial.println("Ready to receive...");
 }
 
 void loop() {
   if (startSignal()) {
-    Serial.println("Receiving code...");
+    Serial.println("Receiving chunk...");
     getInput();
-    Serial.println("Decoded word is " + text);
-    Serial.println();
+
+    Serial.println("Chunk received: " + currentChunk);
+    fullMessage += currentChunk;
+
+    if (currentChunk.endsWith("~*")) {
+      Serial.println("Full message received:");
+      fullMessage.remove(fullMessage.length() - 2); // remove "~*"
+      Serial.println(fullMessage);
+      fullMessage = ""; // reset for next message
+    }
+
     startReceiving = false;
   }
+
   binaryInput = "";
-  text = "";
+  currentChunk = "";
 }
 
 char binaryToChar(String byteStr) {
@@ -50,7 +65,7 @@ void getInput() {
       }
 
       char decodedChar = binaryToChar(byteCandidate);
-      text += decodedChar;
+      currentChunk += decodedChar;
       binaryInput = binaryInput.substring(8);
     }
   }
@@ -60,10 +75,12 @@ void getInput() {
 void receiveEvent(int howMany) {
   while (Wire.available()) {
     char cmd = Wire.read();
-    if (cmd == 'S' || cmd == 's') {
+    if (cmd == 'S') {
       delayMicroseconds(recSpeed / 6);
       delay(500);
       startReceiving = true;
+    } else if (cmd == 'R') {
+      resyncRequested = true;
     }
   }
 }
@@ -77,12 +94,30 @@ boolean startSignal() {
 }
 
 String getBit(String input) {
+  if (resyncRequested) {
+    if (micros() - cycle > recSpeed / 2) {
+      int samples = 10;
+      int lightDetected = 0;
+      for (int i = 0; i < samples; i++) {
+        if (!digitalRead(receiver)) lightDetected++;
+        delayMicroseconds((recSpeed / 6) / samples);
+      }
+
+      bool bit = lightDetected > (samples / 2);
+      String newBit = bit ? "1" : "0";
+      resyncRequested = false;
+      Serial.print(newBit);
+      spaceCount++;
+      cycle = micros();
+      Serial.println("\n*** Resync performed (I2C) ***\n");
+      return input + newBit;
+    }
+  }
+
   int samples = 10;
   int lightDetected = 0;
   for (int i = 0; i < samples; i++) {
-    if (!digitalRead(receiver)) {
-      lightDetected++;
-    }
+    if (!digitalRead(receiver)) lightDetected++;
     delayMicroseconds((recSpeed / 6) / samples);
   }
 
@@ -91,8 +126,6 @@ String getBit(String input) {
 
   bool bit = lightDetected > (samples / 2);
   String newBit = bit ? "1" : "0";
-  String output = input + newBit;
-
   Serial.print(newBit);
   spaceCount++;
   if (spaceCount % 8 == 0) Serial.print(" ");
@@ -101,5 +134,5 @@ String getBit(String input) {
     spaceCount = 0;
   }
 
-  return output;
+  return input + newBit;
 }
