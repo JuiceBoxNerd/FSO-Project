@@ -1,5 +1,5 @@
 #include <Wire.h>
-const int sendSpeed = 25000;  // 25ms in micros
+const int sendSpeed = 25; // microseconds-based
 const int transmitter = 2;
 
 unsigned long cycle = micros();
@@ -47,23 +47,23 @@ void sendBinary(char c) {
 void sendResyncSignal() {
   Wire.beginTransmission(4);
   Wire.write('R');  // Signal resync
+  cycle = micros();
   Wire.endTransmission();
-  delayMicroseconds(sendSpeed/6);  // Short buffer to allow handling
   Serial.print("[SYNC]");
 }
 
 void sendBit(int x) {
   digitalWrite(transmitter, x ? HIGH : LOW);
   while (micros() - cycle < sendSpeed);
-  cycle += sendSpeed;
+  cycle = micros();
   Serial.print(x);
 }
 
 void startSignal() {
   Wire.beginTransmission(4);
   Wire.write('S');
-  delay(500);  // Still in ms due to I2C timing
+  delay(500); // still milliseconds, appropriate for I2C prep
   Wire.endTransmission();
-  delay(500);  // Still in ms
-  cycle = micros();  // micros-based cycle timer
+  delay(500); // same
+  cycle = micros();
 }

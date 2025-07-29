@@ -1,9 +1,8 @@
 #include <Wire.h>
 volatile bool startReceiving = false;
 volatile bool resyncRequested = false;
-
-const int recSpeed = 10000;  // 50ms in micros
-const int receiver = A3;
+const int recSpeed = 10; // microseconds-based speed
+const int receiver = 2;
 int threshold = 100;
 int bitCount = 0;
 String binaryInput = "";
@@ -35,12 +34,12 @@ void loop() {
 }
 
 int initializer() {
-  unsigned long start = millis();
+  unsigned long start = micros();
   long total = 0;
   int count = 0;
 
-  while (millis() - start < 1000) {
-    int reading = analogRead(receiver);
+  while (micros() - start < 1000000) { // 1 second in microseconds
+    int reading = digitalRead(receiver);
     total += reading;
     count++;
   }
@@ -83,11 +82,9 @@ void receiveEvent(int howMany) {
   while (Wire.available()) {
     char cmd = Wire.read();
     if (cmd == 'S' || cmd == 's') {
-      delayMicroseconds(recSpeed / 6);
-      delay(500);
+      delay(recSpeed / 3 + 500); // still in milliseconds
       startReceiving = true;
     } else if (cmd == 'R') {
-      delayMicroseconds(recSpeed/3);
       resyncRequested = true;
     }
   }
@@ -95,31 +92,46 @@ void receiveEvent(int howMany) {
 
 boolean startSignal() {
   if (!startReceiving) return false;
-  delayMicroseconds(recSpeed / 6);
-  delay(500);
+  delay(recSpeed / 2 + 500); // still in milliseconds
   cycle = micros();
   return true;
 }
 
 String getBit(String input) {
   if (resyncRequested) {
-    cycle = micros();  // Reset on resync
-    Serial.println("\n*** Resync performed (I2C) ***\n");
-    resyncRequested = false;
+    if (micros() - cycle > recSpeed * 500) { // equivalent to sendSpeed/2 in microseconds
+      int samples = 10;
+      int lightDetected = 0;
+      for (int i = 0; i < samples; i++) {
+        if (!digitalRead(receiver)) {
+          lightDetected++;
+        }
+        delayMicroseconds((recSpeed * 1000 / 6) / samples);
+      }
+
+      bool bit = lightDetected > (samples / 2);
+      String newBit = bit ? "1" : "0";
+      String output = input + newBit;
+      Serial.print(newBit);
+      spaceCount++;
+      cycle = micros();
+      Serial.println("\n*** Resync performed (I2C) ***\n");
+      resyncRequested = false;
+      return output;
+    }
   }
 
   int samples = 10;
   int lightDetected = 0;
-
   for (int i = 0; i < samples; i++) {
-    if (analogRead(receiver) <= threshold) {
+    if (!digitalRead(receiver)) {
       lightDetected++;
     }
-    delayMicroseconds((recSpeed / 3) / samples);  // short delay between samples
+    delayMicroseconds((recSpeed * 1000 / 6) / samples);
   }
 
-  while (micros() - cycle < recSpeed) {}
-  cycle += recSpeed;
+  while (micros() - cycle < recSpeed * 1000) {}
+  cycle += recSpeed * 1000;
 
   bool bit = lightDetected > (samples / 2);
   String newBit = bit ? "1" : "0";
