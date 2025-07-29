@@ -1,10 +1,10 @@
 #include <Wire.h>
-const int sendSpeed = 50;
+const int sendSpeed = 25;
 const int transmitter = 2;
 
 long cycle = millis();
 int bitsSentSinceResync = 0;
-const int RESYNC_INTERVAL = 128;  // Resync every 128 bits
+const int RESYNC_INTERVAL = 64;  // Resync every 128 bits
 
 void setup() {
   Wire.begin();
@@ -13,6 +13,7 @@ void setup() {
   Serial.begin(9600);
   while (!Serial);
   Serial.println("Enter a text message:");
+  bitsSentSinceResync = 0;
 }
 
 void loop() {

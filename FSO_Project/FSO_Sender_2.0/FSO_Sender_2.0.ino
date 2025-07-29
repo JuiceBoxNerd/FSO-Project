@@ -1,11 +1,11 @@
 #include <Wire.h>
 
-const int sendSpeed = 25000;  // 50 ms in micros
+const int sendSpeed = 5000;  // 50 ms in micros
 const int transmitter = 2;
 
 unsigned long cycle = micros();
 int bitsSentSinceResync = 0;
-const int RESYNC_INTERVAL = 128;  // Resync every 128 bits
+const int RESYNC_INTERVAL = 64;  // Resync every 128 bits
 
 void setup() {
   Wire.begin();
@@ -14,6 +14,7 @@ void setup() {
   Serial.begin(9600);
   while (!Serial);
   Serial.println("Enter a text message:");
+  bitsSentSinceResync = 0;
 }
 
 void loop() {
@@ -48,7 +49,7 @@ void sendResyncSignal() {
   Wire.beginTransmission(4);
   Wire.write('R');  // Signal resync
   Wire.endTransmission();
-  delayMicroseconds(100);  // Short buffer to allow handling
+  delayMicroseconds(1000);  // Short buffer to allow handling
   Serial.print("[SYNC]");
 }
 
@@ -62,8 +63,8 @@ void sendBit(int x) {
 void startSignal() {
   Wire.beginTransmission(4);
   Wire.write('S');
-  delay(500);  // Keep in milliseconds for compatibility with Wire/I2C
+  //delay(500);  // Keep in milliseconds for compatibility with Wire/I2C
   Wire.endTransmission();
-  delay(500);  // Keep in milliseconds for compatibility
+  //delay(500);  // Keep in milliseconds for compatibility
   cycle = micros();  // Reset the cycle timer using micros
 }

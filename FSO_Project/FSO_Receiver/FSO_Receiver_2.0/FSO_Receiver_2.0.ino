@@ -1,7 +1,7 @@
 #include <Wire.h>
 
 const int receiver = A3;
-const int recSpeed = 50000; // 50 ms in micros
+const int recSpeed = 5000; // 50 ms in micros
 int threshold = 100;
 volatile bool startReceiving = false;
 
@@ -41,7 +41,7 @@ void loop() {
         if (byteStr == "00111110") break; // Terminator
         if (byteStr == "00000000") {
           zeroByteCount++;
-          if (zeroByteCount >= 5) break;
+          if (zeroByteCount >= 10) break;
         } else {
           zeroByteCount = 0;
         }
@@ -60,14 +60,14 @@ void loop() {
 
 String readBit() {
   int lightDetected = 0;
-  const int samples = 8;
+  const int samples = 5;
 
   for (int i = 0; i < samples; i++) {
     if (analogRead(receiver) <= threshold) lightDetected++;
-    delayMicroseconds(recSpeed / samples);
+    delayMicroseconds((recSpeed / 3) / samples);
   }
 
-  while (micros() - cycle < recSpeed) {}  // wait for full bit time
+  while (micros() - cycle < recSpeed);  // wait for full bit time
   cycle += recSpeed;
 
   return (lightDetected > (samples / 2)) ? "1" : "0";
@@ -77,7 +77,7 @@ void receiveEvent(int howMany) {
   while (Wire.available()) {
     char cmd = Wire.read();
     if (cmd == 'S') {
-      delayMicroseconds(recSpeed / 2);  // sync midpoint
+      delayMicroseconds(recSpeed / 3);  // sync midpoint
       cycle = micros();
       startReceiving = true;
     }
