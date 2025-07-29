@@ -1,13 +1,14 @@
 #include <Wire.h>
-
-const int sendSpeed = 50000;  // 50ms per bit (in microseconds)
+const int sendSpeed = 50;
 const int transmitter = 2;
-unsigned long cycle = micros();
+
+long cycle = millis();
 int bitsSentSinceResync = 0;
-const int RESYNC_INTERVAL = 128;
+const int RESYNC_INTERVAL = 128;  // Resync every 128 bits
 
 void setup() {
   Wire.begin();
+  pinMode(LED_BUILTIN, OUTPUT); 
   pinMode(transmitter, OUTPUT);
   Serial.begin(9600);
   while (!Serial);
@@ -18,15 +19,14 @@ void loop() {
   if (Serial.available()) {
     String inputText = Serial.readStringUntil('\n');
     Serial.print("Transmitting: " + inputText + "\nBinary Output: ");
-    inputText += ">";  // Terminator
-
+    inputText += ">";  // Use '>' as terminator
     startSignal();
 
     for (int i = 0; i < inputText.length(); i++) {
-      sendBinary(inputText[i]);
+      char c = inputText[i];
+      sendBinary(c);
       Serial.print(" ");
     }
-
     Serial.println("\n\nEnter another text message:");
   }
 }
@@ -37,30 +37,32 @@ void sendBinary(char c) {
       sendResyncSignal();
       bitsSentSinceResync = 0;
     }
+
     sendBit((c >> i) & 1);
     bitsSentSinceResync++;
   }
 }
 
-void sendBit(int bitVal) {
-  digitalWrite(transmitter, bitVal ? HIGH : LOW);
-  while (micros() - cycle < sendSpeed);
-  cycle += sendSpeed;
-  Serial.print(bitVal);
-}
-
 void sendResyncSignal() {
   Wire.beginTransmission(4);
-  Wire.write('R');
+  Wire.write('R');  // Signal resync
   Wire.endTransmission();
-  delayMicroseconds(200);
+  delay(10);  // Short buffer to allow handling
   Serial.print("[SYNC]");
+}
+
+void sendBit(int x) {
+  digitalWrite(transmitter, x ? HIGH : LOW);
+  while (millis() - cycle < sendSpeed);
+  cycle = millis();
+  Serial.print(x);
 }
 
 void startSignal() {
   Wire.beginTransmission(4);
   Wire.write('S');
+  delay(500);
   Wire.endTransmission();
-  delay(5);
-  cycle = micros();
+  delay(500);
+  cycle = millis();
 }
