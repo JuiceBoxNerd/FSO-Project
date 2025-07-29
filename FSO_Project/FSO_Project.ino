@@ -4,7 +4,8 @@ const int transmitter = 2;
 
 long cycle = millis();
 int bitsSentSinceResync = 0;
-const int RESYNC_INTERVAL = 128;
+const int RESYNC_INTERVAL = 128;  // Resync every 64 bits
+const byte SYNC_BYTE = 0b11111110;
 
 void setup() {
   Wire.begin();
@@ -33,22 +34,21 @@ void loop() {
 
 void sendBinary(char c) {
   for (int i = 7; i >= 0; i--) {
-    sendBit((c >> i) & 1);
-    bitsSentSinceResync++;
-
     if (bitsSentSinceResync >= RESYNC_INTERVAL) {
-      sendResyncSignal();
+      sendResyncByte();
       bitsSentSinceResync = 0;
     }
+
+    sendBit((c >> i) & 1);
+    bitsSentSinceResync++;
   }
 }
 
-void sendResyncSignal() {
-  Wire.beginTransmission(4);
-  Wire.write('R');
-  Wire.endTransmission();
-  Serial.print(" [RESYNC]");
-  delay(10);  // allow receiver to reset timing
+void sendResyncByte() {
+  Serial.print("[SYNC]");
+  for (int i = 7; i >= 0; i--) {
+    sendBit((SYNC_BYTE >> i) & 1);
+  }
 }
 
 void sendBit(int x) {
