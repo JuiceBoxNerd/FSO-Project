@@ -2,7 +2,7 @@
 volatile bool startReceiving = false;
 volatile bool resyncRequested = false;
 
-const int recSpeed = 50;
+const int recSpeed = 25;
 const int receiver = A3;
 int threshold = 100;
 int bitCount = 0;
