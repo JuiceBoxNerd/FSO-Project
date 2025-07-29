@@ -51,4 +51,55 @@ void getInput() {
 
       char decodedChar = binaryToChar(byteCandidate);
       text += decodedChar;
-      binaryInput = binaryIn
+      binaryInput = binaryInput.substring(8);
+    }
+  }
+  Serial.println();
+}
+
+void receiveEvent(int howMany) {
+  while (Wire.available()) {
+    char cmd = Wire.read();
+    if (cmd == 'S' || cmd == 's') {
+      delayMicroseconds(recSpeed / 6);
+      delay(500);
+      startReceiving = true;
+    }
+  }
+}
+
+boolean startSignal() {
+  if (!startReceiving) return false;
+  delayMicroseconds(recSpeed / 6);
+  delay(500);
+  cycle = micros();
+  return true;
+}
+
+String getBit(String input) {
+  int samples = 10;
+  int lightDetected = 0;
+  for (int i = 0; i < samples; i++) {
+    if (!digitalRead(receiver)) {
+      lightDetected++;
+    }
+    delayMicroseconds((recSpeed / 6) / samples);
+  }
+
+  while (micros() - cycle < recSpeed) {}
+  cycle += recSpeed;
+
+  bool bit = lightDetected > (samples / 2);
+  String newBit = bit ? "1" : "0";
+  String output = input + newBit;
+
+  Serial.print(newBit);
+  spaceCount++;
+  if (spaceCount % 8 == 0) Serial.print(" ");
+  if (spaceCount >= 160) {
+    Serial.println();
+    spaceCount = 0;
+  }
+
+  return output;
+}

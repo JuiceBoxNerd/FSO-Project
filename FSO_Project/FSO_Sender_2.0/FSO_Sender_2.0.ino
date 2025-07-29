@@ -41,3 +41,23 @@ void loop() {
 }
 
 void sendBinary(char c) {
+  for (int i = 7; i >= 0; i--) {
+    sendBit((c >> i) & 1);
+  }
+}
+
+void sendBit(int x) {
+  digitalWrite(transmitter, x ? HIGH : LOW);
+  while (micros() - cycle < sendSpeed);
+  cycle = micros();
+  Serial.print(x);
+}
+
+void startSignal() {
+  Wire.beginTransmission(4);
+  Wire.write('S');
+  delay(500); // Give the receiver time to get ready
+  Wire.endTransmission();
+  delay(500); // Allow setup before transmission
+  cycle = micros(); // Reset timing cycle
+}
