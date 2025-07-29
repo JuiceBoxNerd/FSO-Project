@@ -62,7 +62,7 @@ void receiveEvent(int howMany) {
   while (Wire.available()) {
     char cmd = Wire.read();
     if (cmd == 'S' || cmd == 's') {
-      delayMicroseconds(recSpeed / 3);
+      delayMicroseconds(recSpeed / 6);
       delay(500);
       startReceiving = true;
     } else if (cmd == 'R') {
@@ -73,7 +73,7 @@ void receiveEvent(int howMany) {
 
 boolean startSignal() {
   if (!startReceiving) return false;
-  delayMicroseconds(recSpeed / 3)
+  delayMicroseconds(recSpeed / 6);
   delay(500);
   cycle = micros();
   return true;
