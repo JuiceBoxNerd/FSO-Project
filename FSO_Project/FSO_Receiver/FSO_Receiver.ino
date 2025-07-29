@@ -1,5 +1,7 @@
 #include <Wire.h>
 volatile bool startReceiving = false;
+volatile bool resyncRequested = false;
+
 const int recSpeed = 50;
 const int receiver = A3;
 int threshold = 100;
@@ -8,9 +10,6 @@ String binaryInput = "";
 String text = "";
 int spaceCount = 0;
 long cycle = millis();
-
-const int SYNC_WINDOW = 8;
-const String SYNC_PATTERN = "11111110";
 
 void setup() {
   Wire.begin(4);
@@ -64,22 +63,14 @@ void getInput() {
     if (binaryInput.length() >= 8) {
       String byteCandidate = binaryInput.substring(0, 8);
 
-      if (byteCandidate == SYNC_PATTERN) {
-        Serial.println("\n*** Resync performed ***\n");
-        binaryInput = "";  // Clear and wait for real data
-        cycle = millis();
-        continue;
+      if (byteCandidate == "00111110") break; // '>' terminator
+      if (byteCandidate == "00000000") {
+        stopCount++;
+        if (stopCount >= 20) break;
+      } else {
+        stopCount = 0;
       }
 
-      if (byteCandidate == "00111110"){
-        break;  // Terminator received
-      }
-      else if(byteCandidate == "00000000"){
-        stopCount++;
-      }
-      if(stopCount >= 20){
-        break;
-      }
       char decodedChar = binaryToChar(byteCandidate);
       text += decodedChar;
       binaryInput = binaryInput.substring(8);
@@ -91,9 +82,11 @@ void getInput() {
 void receiveEvent(int howMany) {
   while (Wire.available()) {
     char cmd = Wire.read();
-    if (cmd == 's' || cmd == 'S') {
+    if (cmd == 'S' || cmd == 's') {
       delay(recSpeed / 2 + 500);
       startReceiving = true;
+    } else if (cmd == 'R') {
+      resyncRequested = true;
     }
   }
 }
@@ -106,6 +99,12 @@ boolean startSignal() {
 }
 
 String getBit(String input) {
+  if (resyncRequested) {
+    cycle = millis();  // Safe to reset here
+    Serial.println("\n*** Resync performed (I2C) ***\n");
+    resyncRequested = false;
+  }
+
   int samples = 10;
   int lightDetected = 0;
 

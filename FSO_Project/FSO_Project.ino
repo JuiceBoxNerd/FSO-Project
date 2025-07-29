@@ -4,8 +4,7 @@ const int transmitter = 2;
 
 long cycle = millis();
 int bitsSentSinceResync = 0;
-const int RESYNC_INTERVAL = 128;  // Resync every 64 bits
-const byte SYNC_BYTE = 0b11111110;
+const int RESYNC_INTERVAL = 128;  // Resync every 128 bits
 
 void setup() {
   Wire.begin();
@@ -20,7 +19,7 @@ void loop() {
   if (Serial.available()) {
     String inputText = Serial.readStringUntil('\n');
     Serial.print("Transmitting: " + inputText + "\nBinary Output: ");
-    inputText += ">";  // Use '>' (00111110) as terminator
+    inputText += ">";  // Use '>' as terminator
     startSignal();
 
     for (int i = 0; i < inputText.length(); i++) {
@@ -35,7 +34,7 @@ void loop() {
 void sendBinary(char c) {
   for (int i = 7; i >= 0; i--) {
     if (bitsSentSinceResync >= RESYNC_INTERVAL) {
-      sendResyncByte();
+      sendResyncSignal();
       bitsSentSinceResync = 0;
     }
 
@@ -44,11 +43,12 @@ void sendBinary(char c) {
   }
 }
 
-void sendResyncByte() {
+void sendResyncSignal() {
+  Wire.beginTransmission(4);
+  Wire.write('R');  // Signal resync
+  Wire.endTransmission();
+  delay(10);  // Short buffer to allow handling
   Serial.print("[SYNC]");
-  for (int i = 7; i >= 0; i--) {
-    sendBit((SYNC_BYTE >> i) & 1);
-  }
 }
 
 void sendBit(int x) {
