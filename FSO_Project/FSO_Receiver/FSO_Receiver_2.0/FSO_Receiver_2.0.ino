@@ -1,9 +1,8 @@
 #include <Wire.h>
 volatile bool startReceiving = false;
 volatile bool resyncRequested = false;
-const int recSpeed = 10; // microseconds-based speed
+const int recSpeed = 10000; // microseconds-based speed
 const int receiver = 2;
-int threshold = 100;
 int bitCount = 0;
 String binaryInput = "";
 String text = "";
@@ -16,8 +15,6 @@ void setup() {
   pinMode(receiver, INPUT);
   Serial.begin(9600);
   while (!Serial);
-  delay(500);
-  threshold = initializer();
   Serial.println();
 }
 
@@ -31,23 +28,6 @@ void loop() {
   }
   binaryInput = "";
   text = "";
-}
-
-int initializer() {
-  unsigned long start = micros();
-  long total = 0;
-  int count = 0;
-
-  while (micros() - start < 1000000) { // 1 second in microseconds
-    int reading = digitalRead(receiver);
-    total += reading;
-    count++;
-  }
-
-  int average = total / count;
-  Serial.print("Final Threshold: ");
-  Serial.println(average - 400);
-  return average - 400;
 }
 
 char binaryToChar(String byteStr) {
@@ -82,7 +62,8 @@ void receiveEvent(int howMany) {
   while (Wire.available()) {
     char cmd = Wire.read();
     if (cmd == 'S' || cmd == 's') {
-      delay(recSpeed / 3 + 500); // still in milliseconds
+      delayMicroseconds(recSpeed / 3);
+      delay(500);
       startReceiving = true;
     } else if (cmd == 'R') {
       resyncRequested = true;
@@ -92,21 +73,22 @@ void receiveEvent(int howMany) {
 
 boolean startSignal() {
   if (!startReceiving) return false;
-  delay(recSpeed / 2 + 500); // still in milliseconds
+  delayMicroseconds(recSpeed / 3)
+  delay(500);
   cycle = micros();
   return true;
 }
 
 String getBit(String input) {
   if (resyncRequested) {
-    if (micros() - cycle > recSpeed * 500) { // equivalent to sendSpeed/2 in microseconds
+    if (micros() - cycle > recSpeed/2) { // equivalent to sendSpeed/2 in microseconds
       int samples = 10;
       int lightDetected = 0;
       for (int i = 0; i < samples; i++) {
         if (!digitalRead(receiver)) {
           lightDetected++;
         }
-        delayMicroseconds((recSpeed * 1000 / 6) / samples);
+        delayMicroseconds((recSpeed/6) / samples);
       }
 
       bool bit = lightDetected > (samples / 2);
@@ -127,11 +109,11 @@ String getBit(String input) {
     if (!digitalRead(receiver)) {
       lightDetected++;
     }
-    delayMicroseconds((recSpeed * 1000 / 6) / samples);
+    delayMicroseconds((recSpeed / 6) / samples);
   }
 
-  while (micros() - cycle < recSpeed * 1000) {}
-  cycle += recSpeed * 1000;
+  while (micros() - cycle < recSpeed) {}
+  cycle += recSpeed;
 
   bool bit = lightDetected > (samples / 2);
   String newBit = bit ? "1" : "0";

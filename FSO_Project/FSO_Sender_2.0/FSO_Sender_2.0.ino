@@ -1,5 +1,5 @@
 #include <Wire.h>
-const int sendSpeed = 25; // microseconds-based
+const int sendSpeed = 10000; // microseconds-based
 const int transmitter = 2;
 
 unsigned long cycle = micros();
