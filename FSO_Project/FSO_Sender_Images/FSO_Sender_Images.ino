@@ -56,23 +56,22 @@ void transmitLongBinary(const String& binary) {
     }
 
     char bitChar = binary[i];
-    int bitValue = (bitChar == '1') ? 1 : 0;
-    sendBit(bitValue);
+    int bitValue = (bitChar == '1') ? HIGH : LOW;
+    sendBit(bitValue, bitChar);  // Pass both value and character for printing
     bitsSentSinceResync++;
-
-    // Debug spacing
-    if ((i + 1) % chunkSize == 0) Serial.print(" ");
   }
 
-  Serial.println();  // Final newline
+  Serial.println();  // Final newline after all bits
   digitalWrite(transmitter, LOW); // Turn off laser after send
 }
 
-void sendBit(int x) {
-  digitalWrite(transmitter, x ? HIGH : LOW);
-  while (micros() - cycle < sendSpeed);  // Wait full bit time
+void sendBit(int bitValue, char bitChar) {
+  digitalWrite(transmitter, bitValue);
+  Serial.print(bitChar);  // Only print the bit when it's being sent
+  Serial.print(" ");      // Space for readability
+
+  while (micros() - cycle < sendSpeed);
   cycle += sendSpeed;
-  Serial.print(x);  // Debug
 }
 
 void sendResyncSignal() {

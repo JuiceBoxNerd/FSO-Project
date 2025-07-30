@@ -102,7 +102,7 @@ void printImage() {
 volatile bool startReceiving = false;
 volatile bool resyncRequested = false;
 
-const int recSpeed = 25000;   // microseconds per bit
+const int recSpeed = 10000;   // microseconds per bit
 const int receiver = 2;       // photodetector pin
 
 #define IMG_WIDTH 4
@@ -116,7 +116,7 @@ int spaceCount = 0;
 int zeroCount = 0;
 unsigned long cycle = micros();
 
-const int ZERO_END_COUNT = 50;
+const int ZERO_END_COUNT = 10;
 
 void setup() {
   Wire.begin(4);  // I2C address
