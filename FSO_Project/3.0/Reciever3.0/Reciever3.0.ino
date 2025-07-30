@@ -1,5 +1,3 @@
-
-volatile bool startReceiving = false;
 const int recSpeed = 25;
 const int startBuffer = 500;
 const int receiver = 2;
@@ -37,7 +35,7 @@ void getInput() {
   int stopCount = 0;
   while (true) {
     binaryInput = binaryInput + getBit(binaryInput);
-    if (binaryInput.length() >= 8) {
+    while(binaryInput.length() >= 8) {
       String byteCandidate = binaryInput.substring(0, 8);
 
       if (byteCandidate == "00111110") break; // '>' terminator
@@ -69,12 +67,12 @@ String getBit(String input) {
   int ocount = 0;
   String output = "";
   while(!digitalRead(receiver)){
-    if((millis()-cycle) > (recSpeed*50)){
+    if((millis()-cycle) > (recSpeed*170)){
       break;
     }
   }
   if((millis()-cycle) > (recSpeed*((tolerance-1)/tolerance))){
-    zcount = ((millis()-cycle)+(recSpeed*(1/tolerance)));
+    zcount = ((millis()-cycle)+(recSpeed*(1/tolerance)))/recSpeed;
     for(int i = 1; i <= zcount; i++){
       output = output + "0";
     }
@@ -83,7 +81,7 @@ String getBit(String input) {
   cycle = millis();
   while(digitalRead(receiver));
   if((millis()-cycle) > (recSpeed*((tolerance-1)/tolerance))){
-    ocount = ((millis()-cycle)+(recSpeed*(1/tolerance)));
+    ocount = ((millis()-cycle)+(recSpeed*(1/tolerance)))/recSpeed;
     for(int i = 1; i <= ocount; i++){
       output = output + "1";
     }
