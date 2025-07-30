@@ -1,6 +1,6 @@
 #include <Wire.h>
 
-const int sendSpeed = 25000;       // microseconds per bit
+const int sendSpeed = 10000;       // microseconds per bit
 const int transmitter = 2;         // Laser or LED pin
 const int RESYNC_INTERVAL = 64;    // Sync every 64 bits
 const int chunkSize = 8;           // For spacing in Serial print
