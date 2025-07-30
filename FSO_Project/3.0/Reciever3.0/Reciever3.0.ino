@@ -66,7 +66,12 @@ void getInput() {
 
 boolean startSignal() {
   cycle = micros();
-  while(digitalRead(receiver)){}
+  while(digitalRead(receiver)){
+    if ((micros() - cycle)>= 10000000){
+      Serial.print("Broke on start");
+      break;
+    }
+  }
   return (micros()-cycle >= (startBuffer*(bufferTolerance-1)/bufferTolerance));
 }
 
@@ -77,6 +82,7 @@ String getBit(String input) {
   String output = "";
   while(!digitalRead(receiver)){
     if((micros()-cycle) > (recSpeed*170)){
+      Serial.print("Broke 0s");
       break;
     }
   }
@@ -89,7 +95,12 @@ String getBit(String input) {
     return output;
   }
   cycle = micros();
-  while(digitalRead(receiver));
+  while(digitalRead(receiver)){
+    if((micros()-cycle) > (recSpeed*170)){
+      Serial.print("Broke 1s");
+      break;
+    }
+  }
   if((micros()-cycle) > (recSpeed*((tolerance-1)/tolerance))){
     ocount = ((micros()-cycle)+(recSpeed*(1/tolerance)))/recSpeed;
     for(int i = 1; i <= ocount; i++){
