@@ -24,7 +24,7 @@ void setup() {
   Serial.begin(9600);
   delay(200);
   while (!Serial);
-  Serial.println("Ready to receive.");
+  Serial.println();
 }
 
 void loop() {
@@ -131,9 +131,23 @@ bool startSignal() {
 }
 
 
+<<<<<<< HEAD
 void getBit() {
   unsigned long duration;
   int count;
+=======
+boolean startSignal() {
+  cycle = micros();
+  while(digitalRead(receiver)){
+    yield();
+    if ((micros() - cycle)>= 10000000){
+      Serial.print("Broke on start");
+      break;
+    }
+  }
+  return (micros()-cycle >= (startBuffer*(bufferTolerance-1)/bufferTolerance));
+}
+>>>>>>> parent of 3cd5897 (Merge branch 'main' of https://github.com/JuiceBoxNerd/FSO-Project)
 
   // Measure LOW
   cycle = micros();

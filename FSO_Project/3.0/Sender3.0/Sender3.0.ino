@@ -88,9 +88,13 @@ void sendBinary(char c) {
 
 void sendBit(int x) {
   digitalWrite(transmitter, x ? HIGH : LOW);
+<<<<<<< HEAD
   while (micros() - cycle < sendSpeed) {
     yield();
   }
+=======
+  while (micros() - cycle < sendSpeed);
+>>>>>>> parent of 3cd5897 (Merge branch 'main' of https://github.com/JuiceBoxNerd/FSO-Project)
   cycle = micros();
   Serial.print(x);  // optional binary print
 }
