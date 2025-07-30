@@ -5,6 +5,8 @@ const int transmitter = 2;         // Laser or LED pin
 const int RESYNC_INTERVAL = 64;    // Sync every 64 bits
 const int chunkSize = 8;           // For spacing in Serial print
 
+const String END_MARKER = "11111111111100000000000011111111";
+
 unsigned long cycle = micros();
 int bitsSentSinceResync = 0;
 
@@ -25,6 +27,8 @@ void loop() {
   while (Serial.available()) {
     char c = Serial.read();
     if (c == '\n') {
+      // Append END_MARKER before sending
+      inputBuffer += END_MARKER;
       transmitLongBinary(inputBuffer);
       inputBuffer = "";
       Serial.println("Transmission Done!\nEnter another binary string:");

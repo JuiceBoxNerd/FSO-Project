@@ -39,7 +39,7 @@ while len(pixels) < 256:
 print(len(pixels))  # This should print 256 for a 16x16 image, 3072 for 32 x32
 
 # Create the image and put the pixel data
-img = Image.new("RGB", (20, 20)) # RGB image
+img = Image.new("RGB", (4, 4)) # RGB image
 
 # Create a grayscale image instead of RGB
 # img = Image.new("L", (20, 20))  # Grayscale image
