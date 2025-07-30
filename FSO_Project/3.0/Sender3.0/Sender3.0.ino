@@ -1,5 +1,10 @@
+<<<<<<< Updated upstream
 const int sendSpeed = 10000;       // microseconds per bit
 const int startBuffer = 100;       // milliseconds
+=======
+const int sendSpeed = 5000;
+const int startBuffer = 500;
+>>>>>>> Stashed changes
 const int transmitter = 2;
 
 const char RESYNC_BYTE = 0xFF;

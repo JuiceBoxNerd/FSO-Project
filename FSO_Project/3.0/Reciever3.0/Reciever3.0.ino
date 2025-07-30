@@ -1,5 +1,10 @@
+<<<<<<< Updated upstream
 const int recSpeed = 10000;         // microseconds per bit
 const int startBuffer = 100;        // milliseconds
+=======
+const int recSpeed = 5000;
+const int startBuffer = 500;
+>>>>>>> Stashed changes
 const int receiver = 2;
 const int tolerance = 3;
 const int bufferTolerance = 10;
@@ -138,22 +143,40 @@ void getBit() {
 =======
 boolean startSignal() {
   cycle = micros();
-  while(digitalRead(receiver)){
+  while(!digitalRead(receiver)){
     yield();
+<<<<<<< Updated upstream
     if ((micros() - cycle)>= 10000000){
       Serial.print("Broke on start");
       break;
     }
   }
   return (micros()-cycle >= (startBuffer*(bufferTolerance-1)/bufferTolerance));
+=======
+    if ((micros() - cycle) >= (((unsigned long)startBuffer*1000*(bufferTolerance+1))/bufferTolerance)){
+      Serial.println("Start Failure: " + digitalRead(receiver));
+      break;
+    }
+  }
+  return ((micros() - cycle) >= ((unsigned long) startBuffer*1000*(bufferTolerance-1)/bufferTolerance));
+>>>>>>> Stashed changes
 }
 >>>>>>> parent of 3cd5897 (Merge branch 'main' of https://github.com/JuiceBoxNerd/FSO-Project)
 
   // Measure LOW
   cycle = micros();
+<<<<<<< Updated upstream
   while (digitalRead(receiver)) {
     yield();
     if ((micros() - cycle) > (unsigned long)recSpeed * 4) {
+=======
+  int zcount = 0;
+  int ocount = 0;
+  String output = "";
+  while(digitalRead(receiver)){
+    yield();
+    if((micros()-cycle) > ((unsigned long)recSpeed *160)){
+>>>>>>> Stashed changes
       Serial.print("Broke 0s");
       return;
     }
@@ -171,10 +194,18 @@ boolean startSignal() {
 
   // Measure HIGH
   cycle = micros();
+<<<<<<< Updated upstream
   while (!digitalRead(receiver)) {
     yield();
     if ((micros() - cycle) > (unsigned long)recSpeed * 4) {
       return;
+=======
+  while(!digitalRead(receiver)){
+    yield();
+    if((micros()-cycle) > ((unsigned long)recSpeed *160)){
+      Serial.print("Broke 1s");
+      break;
+>>>>>>> Stashed changes
     }
   }
 
