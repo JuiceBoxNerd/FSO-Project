@@ -12,7 +12,7 @@ void setup() {
   pinMode(receiver, INPUT);
   Serial.begin(9600);
   while (!Serial);
-  Serial.println();
+  Serial.println("Ready to receive.");
 }
 
 void loop() {
@@ -70,8 +70,8 @@ boolean startSignal() {
   cycle = micros();
   while(digitalRead(receiver)){
     yield();
-    if ((micros() - cycle)>= 10000000){
-      Serial.print("Broke on start");
+    if ((micros() - cycle) >= 500000){
+      Serial.println("Start Failure");
       break;
     }
   }

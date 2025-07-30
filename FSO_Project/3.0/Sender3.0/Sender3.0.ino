@@ -36,7 +36,9 @@ void sendBinary(char c) {
 
 void sendBit(int x) {
   digitalWrite(transmitter, x ? HIGH : LOW);
-  while (micros() - cycle < sendSpeed);
+  while(micros() - cycle < sendSpeed){
+    yield();
+  }
   cycle = micros();
   Serial.print(x);
 }
