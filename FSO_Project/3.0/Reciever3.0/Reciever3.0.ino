@@ -1,9 +1,14 @@
+
+volatile bool startReceiving = false;
 const int recSpeed = 25;
 const int startBuffer = 500;
 const int receiver = 2;
 long cycle = millis();
 const int tolerance = 3;
 const int bufferTolerance = 10;
+String binaryInput = "";
+String text = "";
+
 void setup() {
   // put your setup code here, to run once:
   pinMode(receiver, INPUT);
@@ -19,7 +24,6 @@ void loop() {
     getInput();
     Serial.println("Decoded word is " + text);
     Serial.println();
-    startReceiving = false;
   }
   binaryInput = "";
   text = "";
@@ -55,7 +59,7 @@ void getInput() {
 
 boolean startSignal() {
   cycle = millis();
-  while(digitalRead(reciever)){}
+  while(digitalRead(receiver)){}
   return (millis()-cycle >= (startBuffer*(bufferTolerance-1)/bufferTolerance));
 }
 
@@ -64,24 +68,24 @@ String getBit(String input) {
   int zcount = 0;
   int ocount = 0;
   String output = "";
-  while(!digitalRead(reciever)){
+  while(!digitalRead(receiver)){
     if((millis()-cycle) > (recSpeed*50)){
       break;
     }
   }
-  if((millis()-cycle) > (recSpeed*((tolerance-1)/tolerance)))){
+  if((millis()-cycle) > (recSpeed*((tolerance-1)/tolerance))){
     zcount = ((millis()-cycle)+(recSpeed*(1/tolerance)));
-    loop(int i = 1; i <= zcount; i++){
-      output = output "0";
+    for(int i = 1; i <= zcount; i++){
+      output = output + "0";
     }
     return output;
   }
   cycle = millis();
-  while(digitalRead(reciever));
+  while(digitalRead(receiver));
   if((millis()-cycle) > (recSpeed*((tolerance-1)/tolerance))){
-    zcount = ((millis()-cycle)+(recSpeed*(1/tolerance)));
-    loop(int i = 1; i <= ocount; i++){
-      output = output "1";
+    ocount = ((millis()-cycle)+(recSpeed*(1/tolerance)));
+    for(int i = 1; i <= ocount; i++){
+      output = output + "1";
     }
     return output;
   }
