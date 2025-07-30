@@ -162,10 +162,33 @@ boolean startSignal() {
 
 String getRawBits() {
   String result = "";
-  int totalBits = IMG_WIDTH * IMG_HEIGHT * 24;
-  for (int i = 0; i < totalBits; i++) {
+  int zeroCount = 0;
+  bool seenOne = false;
+
+  while (true) {
     result += readBit();
+    int len = result.length();
+
+    // Stop if we received '>' (00111110)
+    if (len >= 8 && result.substring(len - 8) == "00111110") {
+      result.remove(len - 8);  // remove the '>' from the result
+      Serial.println("\n🛑 End signal received (>)");
+      break;
+    }
+
+    // Watch for 10 zero bits after a 1 was seen
+    if (result[len - 1] == '1') {
+      seenOne = true;
+      zeroCount = 0;
+    } else if (result[len - 1] == '0' && seenOne) {
+      zeroCount++;
+      if (zeroCount >= 10) {
+        Serial.println("\n🛑 Terminated due to 10 consecutive 0s after data.");
+        break;
+      }
+    }
   }
+
   return result;
 }
 
