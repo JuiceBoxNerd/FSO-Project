@@ -35,6 +35,7 @@ void getInput() {
   int stopCount = 0;
   int endPrimed = 0;
   while (true) {
+    yield();
     if(endPrimed < 0){
       endPrimed = 0;
     }
