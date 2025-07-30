@@ -1,4 +1,4 @@
-const int IMG_WIDTH = 20;
+/*const int IMG_WIDTH = 20;
 const int IMG_HEIGHT = 20;
 const int IMG_SIZE = IMG_WIDTH * IMG_HEIGHT * 3; // 3 bytes per pixel (RGB) (Change to 1 for Grayscale)
 
@@ -85,7 +85,7 @@ void printImage() {
     // Move to the next line after printing one row of pixels
     Serial.println();
   }
-}
+}*/
 
 /*
 ██╗██████╗░██╗░░░░░  ░█████╗░░█████╗░██████╗░███████╗
@@ -95,7 +95,7 @@ void printImage() {
 ██║██║░░██║███████╗  ╚█████╔╝╚█████╔╝██████╔╝███████╗
 ╚═╝╚═╝░░╚═╝╚══════╝  ░╚════╝░░╚════╝░╚═════╝░╚══════╝
 */
-/*#include <Wire.h>
+#include <Wire.h>
 
 #define RECEIVER 4
 #define photodetectorPin A0
@@ -200,4 +200,4 @@ void printReceivedImage(String fullBinary) {
   }
 
   Serial.println("\n✅ Transmission Done!\n");
-}*/
+}
