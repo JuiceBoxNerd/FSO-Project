@@ -120,7 +120,7 @@ bool startSignal() {
   cycle = micros();
   while (digitalRead(receiver)) {
     yield();
-    if ((micros() - cycle) >= (unsigned long)(startBuffer * 1000 * (bufferTolerance + 1)) / bufferTolerance) {
+    if ((micros() - cycle) >= ((unsigned long)startBuffer * 1000 * (bufferTolerance + 1)) / bufferTolerance) {
       Serial.println("Start Failure: " + String(digitalRead(receiver)));
       break;
     }
