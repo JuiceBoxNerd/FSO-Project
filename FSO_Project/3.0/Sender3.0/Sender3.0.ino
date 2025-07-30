@@ -1,7 +1,7 @@
 const int sendSpeed = 25;
 const int startBuffer = 500;
 const int transmitter = 2;
-long cycle = millis();
+long cycle = micros();
 
 void setup() {
   // put your setup code here, to run once:
@@ -15,7 +15,7 @@ void loop() {
   if (Serial.available()) {
     String inputText = Serial.readStringUntil('\n');
     Serial.print("Transmitting: " + inputText + "\nBinary Output: ");
-    inputText += ">";  // Use '>' as terminator
+    inputText += "~*";  // Use '>' as terminator
     startSignal();
 
     for (int i = 0; i < inputText.length(); i++) {
@@ -36,8 +36,8 @@ void sendBinary(char c) {
 
 void sendBit(int x) {
   digitalWrite(transmitter, x ? HIGH : LOW);
-  while (millis() - cycle < sendSpeed);
-  cycle = millis();
+  while (micros() - cycle < sendSpeed);
+  cycle = micros();
   Serial.print(x);
 }
 
@@ -46,5 +46,5 @@ void startSignal() {
   delay(startBuffer);
   digitalWrite(transmitter, LOW);
   delay(startBuffer);
-  cycle = millis();
+  cycle = micros();
 }

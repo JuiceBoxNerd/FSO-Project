@@ -1,7 +1,7 @@
-const int recSpeed = 25;
+const int recSpeed = 25000;
 const int startBuffer = 500;
 const int receiver = 2;
-long cycle = millis();
+long cycle = micros();
 const int tolerance = 3;
 const int bufferTolerance = 10;
 String binaryInput = "";
@@ -33,19 +33,30 @@ char binaryToChar(String byteStr) {
 
 void getInput() {
   int stopCount = 0;
+  int endPrimed = 0;
   while (true) {
+    yield();
+    if(endPrimed < 0){
+      endPrimed = 0;
+    }
     binaryInput = binaryInput + getBit(binaryInput);
     while(binaryInput.length() >= 8) {
+      yield();
       String byteCandidate = binaryInput.substring(0, 8);
 
-      if (byteCandidate == "00111110") break; // '>' terminator
+      if (byteCandidate == "01111110"){
+        endPrimed = 2;
+      }
+      if (byteCandidate == "00101010" && endPrimed > 1){
+        break;
+      }
       if (byteCandidate == "00000000") {
         stopCount++;
         if (stopCount >= 20) break;
       } else {
         stopCount = 0;
       }
-
+      endPrimed--;
       char decodedChar = binaryToChar(byteCandidate);
       text += decodedChar;
       binaryInput = binaryInput.substring(8);
@@ -56,34 +67,50 @@ void getInput() {
 
 
 boolean startSignal() {
-  cycle = millis();
-  while(digitalRead(receiver)){}
-  return (millis()-cycle >= (startBuffer*(bufferTolerance-1)/bufferTolerance));
+  cycle = micros();
+  while(digitalRead(receiver)){
+    yield();
+    if ((micros() - cycle)>= 10000000){
+      Serial.print("Broke on start");
+      break;
+    }
+  }
+  return (micros()-cycle >= (startBuffer*(bufferTolerance-1)/bufferTolerance));
 }
 
 String getBit(String input) {
-  cycle = millis();
+  cycle = micros();
   int zcount = 0;
   int ocount = 0;
   String output = "";
   while(!digitalRead(receiver)){
-    if((millis()-cycle) > (recSpeed*170)){
+    yield();
+    if((micros()-cycle) > (recSpeed*170)){
+      Serial.print("Broke 0s");
       break;
     }
   }
-  if((millis()-cycle) > (recSpeed*((tolerance-1)/tolerance))){
-    zcount = ((millis()-cycle)+(recSpeed*(1/tolerance)))/recSpeed;
+  if((micros()-cycle) > (recSpeed*((tolerance-1)/tolerance))){
+    zcount = ((micros()-cycle)+(recSpeed*(1/tolerance)))/recSpeed;
     for(int i = 1; i <= zcount; i++){
       output = output + "0";
+      Serial.print(output);
     }
     return output;
   }
-  cycle = millis();
-  while(digitalRead(receiver));
-  if((millis()-cycle) > (recSpeed*((tolerance-1)/tolerance))){
-    ocount = ((millis()-cycle)+(recSpeed*(1/tolerance)))/recSpeed;
+  cycle = micros();
+  while(digitalRead(receiver)){
+    yield();
+    if((micros()-cycle) > (recSpeed*170)){
+      Serial.print("Broke 1s");
+      break;
+    }
+  }
+  if((micros()-cycle) > (recSpeed*((tolerance-1)/tolerance))){
+    ocount = ((micros()-cycle)+(recSpeed*(1/tolerance)))/recSpeed;
     for(int i = 1; i <= ocount; i++){
       output = output + "1";
+      Serial.print(output);
     }
     return output;
   }
