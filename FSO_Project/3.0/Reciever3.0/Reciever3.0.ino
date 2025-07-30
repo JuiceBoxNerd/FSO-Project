@@ -1,5 +1,5 @@
-const int recSpeed = 25000;         // microseconds per bit
-const int startBuffer = 500;        // milliseconds
+const int recSpeed = 10000;         // microseconds per bit
+const int startBuffer = 50;        // milliseconds
 const int receiver = 2;
 const int tolerance = 3;
 const int bufferTolerance = 10;
@@ -20,8 +20,9 @@ int charCount = 0;
 bool expectingSecondResyncByte = false;
 
 void setup() {
-  pinMode(receiver, INPUT);
+  pinMode(receiver, INPUT_PULLUP);
   Serial.begin(9600);
+  delay(200);
   while (!Serial);
   Serial.println("Ready to receive.");
 }
@@ -117,16 +118,29 @@ void getInput() {
 }
 
 bool startSignal() {
-  cycle = micros();
+  // Wait for pin to go LOW (start signal)
+  unsigned long startTime = micros();
   while (digitalRead(receiver)) {
-    yield();
-    if ((micros() - cycle) >= ((unsigned long)startBuffer * 1000 * (bufferTolerance + 1)) / bufferTolerance) {
-      Serial.println("Start Failure: " + String(digitalRead(receiver)));
-      break;
+    if ((micros() - startTime) > (unsigned long)startBuffer * 1000) {
+      Serial.println("Start Failure: 1");
+      return false;
     }
+    yield();
   }
-  return (micros() - cycle) >= (unsigned long)(startBuffer * (bufferTolerance - 1)) / bufferTolerance;
+
+  unsigned long lowStart = micros();
+  while (!digitalRead(receiver)) {
+    if ((micros() - lowStart) > (unsigned long)startBuffer * 1000 * 2) {
+      Serial.println("Start Failure: 0");
+      return false;
+    }
+    yield();
+  }
+
+  unsigned long lowDuration = micros() - lowStart;
+  return lowDuration > (((unsigned long)startBuffer * 1000 * (bufferTolerance-1))/bufferTolerance);
 }
+
 
 void getBit() {
   unsigned long duration;

@@ -1,57 +1,83 @@
-const unsigned int sendSpeed = 25000;     // microseconds per bit
-const unsigned int startBuffer = 500;     // milliseconds
+const int sendSpeed = 10000;       // microseconds per bit
+const int startBuffer = 50;       // milliseconds
 const int transmitter = 2;
 
-unsigned long cycle = 0;
-#define MAX_MSG_LEN 125                  // Safe limit for input
+const char RESYNC_BYTE = 0xFF;
 const int RESYNC_INTERVAL = 25;
-const char RESYNC_BYTE = 0xFF;            
 
-char inputText[MAX_MSG_LEN + 3];         // +2 for "~*" + null terminator
+const int MAX_TEXT_LENGTH = 500;   // total safe message length
+const int CHUNK_SIZE = 50;         // per transmission loop
+
+char message[MAX_TEXT_LENGTH + 1];
+char chunk[CHUNK_SIZE + 1];
+
+long cycle = micros();
 
 void setup() {
   pinMode(transmitter, OUTPUT);
   Serial.begin(9600);
   while (!Serial);
-  Serial.println("Enter a text message:");
+  Serial.println("Enter a text message (max 500 chars):");
 }
 
 void loop() {
   if (Serial.available()) {
-    size_t len = Serial.readBytesUntil('\n', inputText, MAX_MSG_LEN);
-    inputText[len] = '\0';
+    int len = readSerialInput(message, MAX_TEXT_LENGTH);
+    if (len <= 0) return;
 
-    // Append terminator "~*"
-    if (len <= MAX_MSG_LEN - 2) {
-      inputText[len++] = '~';
-      inputText[len++] = '*';
-    }
-    inputText[len] = '\0';
-
+    appendTerminator(message, len);
     Serial.print("Transmitting: ");
-    Serial.println(inputText);
-    Serial.print("Binary Output: ");
+    Serial.println(message);
 
     startSignal();
 
-    int charCount = 0;
-    for (size_t i = 0; i < len; i++) {
-      sendBinary(inputText[i]);
-      Serial.print(" ");
-      charCount++;
+    int totalChars = strlen(message);
+    int charIndex = 0;
+    int charsSinceResync = 0;
 
-      if (charCount >= RESYNC_INTERVAL) {
-        // Send resync sequence (two '~' bytes)
-        sendBinary(RESYNC_BYTE);
-        sendBinary(RESYNC_BYTE);
-        Serial.print(" ");
-        Serial.print(" ");
-        charCount = 0;
+    while (charIndex < totalChars) {
+      int chunkLen = min(CHUNK_SIZE, totalChars - charIndex);
+      strncpy(chunk, &message[charIndex], chunkLen);
+      chunk[chunkLen] = '\0';
+
+      for (int i = 0; i < chunkLen; i++) {
+        sendBinary(chunk[i]);
+        Serial.print(" ");  // optional binary debug
+        charsSinceResync++;
+
+        if (charsSinceResync >= RESYNC_INTERVAL) {
+          sendBinary(RESYNC_BYTE);
+          sendBinary(RESYNC_BYTE);
+          Serial.print(" RS RS ");  // optional debug
+          charsSinceResync = 0;
+        }
       }
+
+      charIndex += chunkLen;
     }
 
     Serial.println("\n\nEnter another text message:");
   }
+}
+
+int readSerialInput(char* buffer, int maxLen) {
+  int i = 0;
+  while (Serial.available() && i < maxLen) {
+    char c = Serial.read();
+    if (c == '\n') break;
+    buffer[i++] = c;
+  }
+  buffer[i] = '\0';
+  // Flush remaining input if too long
+  while (Serial.available()) Serial.read();
+  return i;
+}
+
+void appendTerminator(char* buf, int currentLen) {
+  if (currentLen + 2 >= MAX_TEXT_LENGTH) return;  // prevent overflow
+  buf[currentLen++] = '~';
+  buf[currentLen++] = '*';
+  buf[currentLen] = '\0';
 }
 
 void sendBinary(char c) {
@@ -60,11 +86,13 @@ void sendBinary(char c) {
   }
 }
 
-void sendBit(bool bit) {
-  digitalWrite(transmitter, bit ? HIGH : LOW);
-  while (micros() - cycle < sendSpeed) yield();
+void sendBit(int x) {
+  digitalWrite(transmitter, x ? HIGH : LOW);
+  while (micros() - cycle < sendSpeed) {
+    yield();
+  }
   cycle = micros();
-  Serial.print(bit);
+  Serial.print(x);  // optional binary print
 }
 
 void startSignal() {
