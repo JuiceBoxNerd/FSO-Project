@@ -1,9 +1,9 @@
 #include <Wire.h>
 
-const int sendSpeed = 10000; // microseconds
-const int transmitter = 2;
-const int RESYNC_INTERVAL = 64;
-const int chunkSize = 8; // You can adjust this for the chunk size
+const int sendSpeed = 25000;       // microseconds per bit
+const int transmitter = 2;         // Laser or LED pin
+const int RESYNC_INTERVAL = 64;    // Sync every 64 bits
+const int chunkSize = 8;           // For spacing in Serial print
 
 unsigned long cycle = micros();
 int bitsSentSinceResync = 0;
@@ -14,56 +14,71 @@ void setup() {
   pinMode(transmitter, OUTPUT);
   Serial.begin(9600);
   while (!Serial);
-  Serial.println("Enter a binary string:");
+
+  Serial.println("Enter a long binary string to transmit:");
   bitsSentSinceResync = 0;
 }
 
 void loop() {
-  if (Serial.available()) {
-    String inputBinary = Serial.readStringUntil('\n');
-    inputBinary.trim(); // Remove any leading/trailing whitespace
+  static String inputBuffer = "";
 
-    // Ensure the binary string has a length that's a multiple of 8
-    while (inputBinary.length() % 8 != 0) {
-      inputBinary += "0"; // Pad with zeroes to make it a multiple of 8
+  while (Serial.available()) {
+    char c = Serial.read();
+    if (c == '\n') {
+      transmitLongBinary(inputBuffer);
+      inputBuffer = "";
+      Serial.println("Transmission Done!\nEnter another binary string:");
+    } else if (c == '0' || c == '1') {
+      inputBuffer += c;
     }
-
-    Serial.print("Transmitting binary data: ");
-    Serial.println(inputBinary);
-
-    // Send the binary data in chunks of 8 bits
-    for (int start = 0; start < inputBinary.length(); start += chunkSize) {
-      String chunk = inputBinary.substring(start, start + chunkSize);
-      startSignal();
-      for (int i = 0; i < chunk.length(); i++) {
-        sendBit(chunk[i] == '1' ? 1 : 0); // Send '1' or '0'
-      }
-      Serial.println();  // Newline after each chunk
-    }
-
-    Serial.println("Transmission Done!\nEnter another binary string:");
   }
+}
+
+void transmitLongBinary(const String& binary) {
+  Serial.print("Transmitting ");
+  Serial.print(binary.length());
+  Serial.println(" bits...");
+
+  startSignal();
+
+  for (int i = 0; i < binary.length(); i++) {
+    if (bitsSentSinceResync >= RESYNC_INTERVAL) {
+      sendResyncSignal();
+      bitsSentSinceResync = 0;
+    }
+
+    char bitChar = binary[i];
+    if (bitChar == '0' || bitChar == '1') {
+      int bitValue = (bitChar == '1') ? 1 : 0;
+      sendBit(bitValue);
+      bitsSentSinceResync++;
+
+      // Optional: print bit every 8 for debug spacing
+      if ((i + 1) % chunkSize == 0) Serial.print(" ");
+    }
+  }
+
+  Serial.println();  // Final newline
 }
 
 void sendBit(int x) {
   digitalWrite(transmitter, x ? HIGH : LOW);
-  while (micros() - cycle < sendSpeed);
-  cycle = micros();
-  Serial.print(x); // Print the bit being sent
+  while (micros() - cycle < sendSpeed);  // Wait full cycle
+  cycle = micros();                      // Reset timer
+  Serial.print(x);                       // For debug
 }
 
 void sendResyncSignal() {
   Wire.beginTransmission(4);
   Wire.write('R');
-  cycle = micros();
   Wire.endTransmission();
+  cycle = micros();
   Serial.print("[SYNC]");
 }
 
 void startSignal() {
   Wire.beginTransmission(4);
   Wire.write('S');
-  delay(25);
   Wire.endTransmission();
   delay(25);
   cycle = micros();
