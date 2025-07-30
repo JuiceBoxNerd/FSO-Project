@@ -125,8 +125,7 @@ void loop() {
     Serial.println("Receiving image data...");
     fullMessage = getRawBits();
 
-    Serial.println("\n📥 Raw binary received:");
-    printBitSummary(fullMessage);
+    Serial.println("\n✅ Done receiving.\n");
 
     if (fullMessage.length() >= IMG_WIDTH * IMG_HEIGHT * 24) {
       printImage(fullMessage);
@@ -162,10 +161,41 @@ boolean startSignal() {
 
 String getRawBits() {
   String result = "";
-  int totalBits = IMG_WIDTH * IMG_HEIGHT * 24;
-  for (int i = 0; i < totalBits; i++) {
-    result += readBit();
+  int zeroCount = 0;
+  bool seenOne = false;
+
+  Serial.println("🔄 Receiving bits in real-time:");
+
+  while (true) {
+    String bit = readBit();
+    result += bit;
+    Serial.print(bit);
+
+    // Format output: space every 8 bits, newline every 160
+    if (result.length() % 8 == 0) Serial.print(" ");
+    if (result.length() % 160 == 0) Serial.println();
+
+    if (bit == "1") {
+      seenOne = true;
+      zeroCount = 0;
+    } else if (seenOne) {
+      zeroCount++;
+    }
+
+    // Stop if 10 consecutive 0s after a 1
+    if (zeroCount >= 10) {
+      Serial.println("\n🛑 Stopped after 10 consecutive 0s.");
+      break;
+    }
+
+    // Check for ASCII '>' (binary "00111110")
+    int len = result.length();
+    if (len >= 8 && result.substring(len - 8) == "00111110") {
+      Serial.println("\n🛑 Stopped at end character ('>').");
+      break;
+    }
   }
+
   return result;
 }
 
@@ -183,21 +213,14 @@ String readBit() {
   return (lightDetected > samples / 2) ? "1" : "0";
 }
 
-void printBitSummary(const String &bits) {
-  for (int i = 0; i < bits.length(); i++) {
-    Serial.print(bits[i]);
-    if ((i + 1) % 8 == 0) Serial.print(" ");
-    if ((i + 1) % 160 == 0) Serial.println();
-  }
-  Serial.println();
-}
-
 void printImage(String binaryStr) {
   Serial.println("\n🖼️ RGB Matrix:");
 
   for (int y = 0; y < IMG_HEIGHT; y++) {
     for (int x = 0; x < IMG_WIDTH; x++) {
       int i = (y * IMG_WIDTH + x) * 24;
+      if (i + 24 > binaryStr.length()) break;
+
       byte r = strtol(binaryStr.substring(i, i + 8).c_str(), NULL, 2);
       byte g = strtol(binaryStr.substring(i + 8, i + 16).c_str(), NULL, 2);
       byte b = strtol(binaryStr.substring(i + 16, i + 24).c_str(), NULL, 2);
