@@ -127,18 +127,7 @@ bool startSignal() {
     }
     yield();
   }
-
-  unsigned long lowStart = micros();
-  while (!digitalRead(receiver)) {
-    if ((micros() - lowStart) > (unsigned long)startBuffer * 1000 * 2) {
-      Serial.println("Start Failure: 0");
-      return false;
-    }
-    yield();
-  }
-
-  unsigned long lowDuration = micros() - lowStart;
-  return lowDuration > (((unsigned long)startBuffer * 1000 * (bufferTolerance-1))/bufferTolerance);
+  return (micros()-startTime) > (((unsigned long)startBuffer * 1000 * (bufferTolerance-1))/bufferTolerance);
 }
 
 
