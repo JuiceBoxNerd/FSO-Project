@@ -1,4 +1,4 @@
-const int recSpeed = 25000;
+const long recSpeed = 25000;
 const int startBuffer = 500;
 const int receiver = 2;
 long cycle = micros();
@@ -70,12 +70,12 @@ boolean startSignal() {
   cycle = micros();
   while(digitalRead(receiver)){
     yield();
-    if ((micros() - cycle) >= 500000){
-      Serial.println("Start Failure");
+    if ((micros() - cycle) >= ((startBuffer*1000*(bufferTolerance+1))/bufferTolerance)){
+      Serial.println("Start Failure: " + digitalRead(receiver));
       break;
     }
   }
-  return (micros()-cycle >= (startBuffer*(bufferTolerance-1)/bufferTolerance));
+  return ((micros() - cycle) >= (startBuffer*(bufferTolerance-1)/bufferTolerance));
 }
 
 String getBit(String input) {
@@ -85,7 +85,7 @@ String getBit(String input) {
   String output = "";
   while(!digitalRead(receiver)){
     yield();
-    if((micros()-cycle) > (recSpeed*170)){
+    if((micros()-cycle) > (recSpeed*160)){
       Serial.print("Broke 0s");
       break;
     }
@@ -101,7 +101,7 @@ String getBit(String input) {
   cycle = micros();
   while(digitalRead(receiver)){
     yield();
-    if((micros()-cycle) > (recSpeed*170)){
+    if((micros()-cycle) > (recSpeed*160)){
       Serial.print("Broke 1s");
       break;
     }
