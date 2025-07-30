@@ -41,6 +41,7 @@ void getInput() {
     }
     binaryInput = binaryInput + getBit(binaryInput);
     while(binaryInput.length() >= 8) {
+      yield();
       String byteCandidate = binaryInput.substring(0, 8);
 
       if (byteCandidate == "01111110"){
@@ -68,6 +69,7 @@ void getInput() {
 boolean startSignal() {
   cycle = micros();
   while(digitalRead(receiver)){
+    yield();
     if ((micros() - cycle)>= 10000000){
       Serial.print("Broke on start");
       break;
@@ -82,6 +84,7 @@ String getBit(String input) {
   int ocount = 0;
   String output = "";
   while(!digitalRead(receiver)){
+    yield();
     if((micros()-cycle) > (recSpeed*170)){
       Serial.print("Broke 0s");
       break;
@@ -97,6 +100,7 @@ String getBit(String input) {
   }
   cycle = micros();
   while(digitalRead(receiver)){
+    yield();
     if((micros()-cycle) > (recSpeed*170)){
       Serial.print("Broke 1s");
       break;
