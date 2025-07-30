@@ -2,6 +2,7 @@
 
 volatile bool startReceiving = false;
 volatile bool resyncRequested = false;
+bool broken = false;
 
 const int recSpeed = 10000;
 const int receiver = 2;
@@ -30,7 +31,7 @@ void loop() {
     Serial.println("Chunk received: " + currentChunk);
     fullMessage += currentChunk;
 
-    if (currentChunk.endsWith("~*")) {
+    if (currentChunk.endsWith("~*")||broken) {
       Serial.println("Full message received:");
       fullMessage.remove(fullMessage.length() - 2); // remove "~*"
       Serial.println(fullMessage);
@@ -42,6 +43,7 @@ void loop() {
 
   binaryInput = "";
   currentChunk = "";
+  broken = false;
 }
 
 char binaryToChar(String byteStr) {
@@ -59,7 +61,10 @@ void getInput() {
       if (byteCandidate == "00111110") break; // '>' terminator
       if (byteCandidate == "00000000") {
         stopCount++;
-        if (stopCount >= 20) break;
+        if (stopCount >= 20) {
+          broken = true;
+          break;
+        }
       } else {
         stopCount = 0;
       }
