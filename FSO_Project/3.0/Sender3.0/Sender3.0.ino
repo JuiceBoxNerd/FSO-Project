@@ -1,4 +1,4 @@
-const int sendSpeed = 25;
+const int sendSpeed = 25000;
 const int startBuffer = 500;
 const int transmitter = 2;
 long cycle = micros();

@@ -90,8 +90,8 @@ String getBit(String input) {
       break;
     }
   }
-  if((micros()-cycle) > (recSpeed*((tolerance-1)/tolerance))){
-    zcount = ((micros()-cycle)+(recSpeed*(1/tolerance)))/recSpeed;
+  if((micros()-cycle) > ((recSpeed*(tolerance-1))/tolerance)){
+    zcount = ((micros()-cycle)+(recSpeed/tolerance))/recSpeed;
     for(int i = 1; i <= zcount; i++){
       output = output + "0";
       Serial.print(output);
@@ -106,8 +106,8 @@ String getBit(String input) {
       break;
     }
   }
-  if((micros()-cycle) > (recSpeed*((tolerance-1)/tolerance))){
-    ocount = ((micros()-cycle)+(recSpeed*(1/tolerance)))/recSpeed;
+  if((micros()-cycle) > ((recSpeed*(tolerance-1))/tolerance)){
+    ocount = ((micros()-cycle)+(recSpeed/tolerance))/recSpeed;
     for(int i = 1; i <= ocount; i++){
       output = output + "1";
       Serial.print(output);
