@@ -100,13 +100,14 @@ void printImage() {
 #include <Wire.h>
 
 volatile bool startReceiving = false;
-volatile bool resyncRequested = false;
 
 const int recSpeed = 25000;   // microseconds per bit
 const int receiver = 2;       // photodetector pin
 
-#define IMG_WIDTH 16
-#define IMG_HEIGHT 16
+#define IMG_WIDTH 4
+#define IMG_HEIGHT 4
+
+const String END_MARKER = "11111111111100000000000011111111";
 
 String fullMessage = "";
 unsigned long cycle = micros();
@@ -117,12 +118,16 @@ void setup() {
   pinMode(receiver, INPUT);
   Serial.begin(9600);
   while (!Serial);
-  Serial.println("Ready to receive...");
+  Serial.println("🔌 Ready to receive...");
 }
 
 void loop() {
-  if (startSignal()) {
-    Serial.println("Receiving image data...");
+  if (startReceiving) {
+    delayMicroseconds(recSpeed / 6);
+    delay(25);
+    cycle = micros();
+    Serial.println("📡 Receiving image data...");
+
     fullMessage = getRawBits();
 
     Serial.println("\n✅ Done receiving.\n");
@@ -142,28 +147,13 @@ void receiveEvent(int howMany) {
   while (Wire.available()) {
     char cmd = Wire.read();
     if (cmd == 'S') {
-      delayMicroseconds(recSpeed / 6);
-      delay(25);
       startReceiving = true;
-    } else if (cmd == 'R') {
-      resyncRequested = true;
     }
   }
 }
 
-boolean startSignal() {
-  if (!startReceiving) return false;
-  delayMicroseconds(recSpeed / 6);
-  delay(25);
-  cycle = micros();
-  return true;
-}
-
 String getRawBits() {
   String result = "";
-  int zeroCount = 0;
-  bool seenOne = false;
-
   Serial.println("🔄 Receiving bits in real-time:");
 
   while (true) {
@@ -171,27 +161,12 @@ String getRawBits() {
     result += bit;
     Serial.print(bit);
 
-    // Format output: space every 8 bits, newline every 160
     if (result.length() % 8 == 0) Serial.print(" ");
     if (result.length() % 160 == 0) Serial.println();
 
-    if (bit == "1") {
-      seenOne = true;
-      zeroCount = 0;
-    } else if (seenOne) {
-      zeroCount++;
-    }
-
-    // Stop if 10 consecutive 0s after a 1
-    if (zeroCount >= 10) {
-      Serial.println("\n🛑 Stopped after 10 consecutive 0s.");
-      break;
-    }
-
-    // Check for ASCII '>' (binary "00111110")
-    int len = result.length();
-    if (len >= 8 && result.substring(len - 8) == "00111110") {
-      Serial.println("\n🛑 Stopped at end character ('>').");
+    if (result.endsWith(END_MARKER)) {
+      Serial.println("\n🛑 Detected END_MARKER.");
+      result.remove(result.length() - END_MARKER.length());
       break;
     }
   }
@@ -202,6 +177,7 @@ String getRawBits() {
 String readBit() {
   int samples = 10;
   int lightDetected = 0;
+
   for (int i = 0; i < samples; i++) {
     if (!digitalRead(receiver)) lightDetected++;
     delayMicroseconds((recSpeed / 6) / samples);

@@ -12,7 +12,7 @@ from PIL import Image
 
 
 # RGB
-img = Image.open("/Users/anthonytatsuta/Documents/Mario_Pixel.png").resize((16, 16)).convert("RGB")
+img = Image.open("/Users/anthonytatsuta/Documents/Mario_Pixel.png").resize((4, 4)).convert("RGB")
 # --------------------
 # Grayscale
 # img = Image.open("/Users/anthonytatsuta/Documents/_D757650.jpg").resize((20, 20)).convert('L')  # 'L' = grayscale
