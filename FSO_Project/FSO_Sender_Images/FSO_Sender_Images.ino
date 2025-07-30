@@ -84,9 +84,11 @@ void sendResyncSignal() {
 }
 
 void startSignal() {
-  Wire.beginTransmission(4);  // Receiver address
+  Wire.beginTransmission(4);
   Wire.write('S');
+  delay(25);
   Wire.endTransmission();
-  delay(25);  // Give time for receiver to get ready
+  delay(25);
+  cycle = micros();
   Serial.println("🚨 Start Signal Sent!");
 }
