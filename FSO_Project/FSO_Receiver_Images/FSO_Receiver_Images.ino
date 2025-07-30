@@ -102,17 +102,13 @@ void printImage() {
 volatile bool startReceiving = false;
 volatile bool resyncRequested = false;
 
-const int recSpeed = 10000;   // microseconds per bit
+const int recSpeed = 25000;   // microseconds per bit
 const int receiver = 2;       // photodetector pin
 
 #define IMG_WIDTH 16
 #define IMG_HEIGHT 16
 
-String binaryInput = "";
-String currentChunk = "";
 String fullMessage = "";
-
-int spaceCount = 0;
 unsigned long cycle = micros();
 
 void setup() {
@@ -126,52 +122,21 @@ void setup() {
 
 void loop() {
   if (startSignal()) {
-    Serial.println("Receiving chunk...");
-    getInput();
+    Serial.println("Receiving image data...");
+    fullMessage = getRawBits();
 
-    Serial.println("Chunk received: " + currentChunk);
-    fullMessage += currentChunk;
+    Serial.println("\n📥 Raw binary received:");
+    printBitSummary(fullMessage);
 
-    if (currentChunk.endsWith("~*")) {
-      Serial.println("Full binary message received.");
-      fullMessage.remove(fullMessage.length() - 2); // remove "~*"
+    if (fullMessage.length() >= IMG_WIDTH * IMG_HEIGHT * 24) {
       printImage(fullMessage);
-      fullMessage = ""; // reset
+    } else {
+      Serial.println("❌ Not enough data for full image.");
     }
 
+    fullMessage = "";
     startReceiving = false;
   }
-
-  binaryInput = "";
-  currentChunk = "";
-}
-
-char binaryToChar(String byteStr) {
-  return (char)strtol(byteStr.c_str(), NULL, 2);
-}
-
-void getInput() {
-  int stopCount = 0;
-  while (true) {
-    binaryInput = getBit(binaryInput);
-
-    if (binaryInput.length() >= 8) {
-      String byteCandidate = binaryInput.substring(0, 8);
-
-      if (byteCandidate == "00111110") break; // '>' terminator
-      if (byteCandidate == "00000000") {
-        stopCount++;
-        if (stopCount >= 20) break;
-      } else {
-        stopCount = 0;
-      }
-
-      char decodedChar = binaryToChar(byteCandidate);
-      currentChunk += decodedChar;
-      binaryInput = binaryInput.substring(8);
-    }
-  }
-  Serial.println();
 }
 
 void receiveEvent(int howMany) {
@@ -195,27 +160,16 @@ boolean startSignal() {
   return true;
 }
 
-String getBit(String input) {
-  if (resyncRequested) {
-    if (micros() - cycle > recSpeed / 2) {
-      int samples = 10;
-      int lightDetected = 0;
-      for (int i = 0; i < samples; i++) {
-        if (!digitalRead(receiver)) lightDetected++;
-        delayMicroseconds((recSpeed / 6) / samples);
-      }
-
-      bool bit = lightDetected > (samples / 2);
-      String newBit = bit ? "1" : "0";
-      resyncRequested = false;
-      Serial.print(newBit);
-      spaceCount++;
-      cycle = micros();
-      Serial.println("\n*** Resync performed (I2C) ***\n");
-      return input + newBit;
-    }
+String getRawBits() {
+  String result = "";
+  int totalBits = IMG_WIDTH * IMG_HEIGHT * 24;
+  for (int i = 0; i < totalBits; i++) {
+    result += readBit();
   }
+  return result;
+}
 
+String readBit() {
   int samples = 10;
   int lightDetected = 0;
   for (int i = 0; i < samples; i++) {
@@ -226,40 +180,27 @@ String getBit(String input) {
   while (micros() - cycle < recSpeed) {}
   cycle += recSpeed;
 
-  bool bit = lightDetected > (samples / 2);
-  String newBit = bit ? "1" : "0";
-  Serial.print(newBit);
-  spaceCount++;
-  if (spaceCount % 8 == 0) Serial.print(" ");
-  if (spaceCount >= 160) {
-    Serial.println();
-    spaceCount = 0;
-  }
+  return (lightDetected > samples / 2) ? "1" : "0";
+}
 
-  return input + newBit;
+void printBitSummary(const String &bits) {
+  for (int i = 0; i < bits.length(); i++) {
+    Serial.print(bits[i]);
+    if ((i + 1) % 8 == 0) Serial.print(" ");
+    if ((i + 1) % 160 == 0) Serial.println();
+  }
+  Serial.println();
 }
 
 void printImage(String binaryStr) {
-  Serial.println("\n\n📷 Image RGB Matrix:\n");
-
-  const int totalPixels = IMG_WIDTH * IMG_HEIGHT;
-  const int expectedBits = totalPixels * 24;
-
-  if (binaryStr.length() < expectedBits) {
-    Serial.print("❌ Error: Expected ");
-    Serial.print(expectedBits);
-    Serial.print(" bits, got ");
-    Serial.println(binaryStr.length());
-    return;
-  }
+  Serial.println("\n🖼️ RGB Matrix:");
 
   for (int y = 0; y < IMG_HEIGHT; y++) {
     for (int x = 0; x < IMG_WIDTH; x++) {
-      int pixelIndex = (y * IMG_WIDTH + x) * 24;
-
-      byte r = strtol(binaryStr.substring(pixelIndex, pixelIndex + 8).c_str(), NULL, 2);
-      byte g = strtol(binaryStr.substring(pixelIndex + 8, pixelIndex + 16).c_str(), NULL, 2);
-      byte b = strtol(binaryStr.substring(pixelIndex + 16, pixelIndex + 24).c_str(), NULL, 2);
+      int i = (y * IMG_WIDTH + x) * 24;
+      byte r = strtol(binaryStr.substring(i, i + 8).c_str(), NULL, 2);
+      byte g = strtol(binaryStr.substring(i + 8, i + 16).c_str(), NULL, 2);
+      byte b = strtol(binaryStr.substring(i + 16, i + 24).c_str(), NULL, 2);
 
       Serial.print("(");
       Serial.print(r);
@@ -274,5 +215,5 @@ void printImage(String binaryStr) {
     Serial.println();
   }
 
-  Serial.println("\n✅ RGB image print complete.");
+  Serial.println("\n✅ Image rendering done.");
 }
