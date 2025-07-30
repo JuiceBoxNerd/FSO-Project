@@ -102,11 +102,11 @@ void printImage() {
 volatile bool startReceiving = false;
 volatile bool resyncRequested = false;
 
-const int recSpeed = 10000;   // microseconds per bit
+const int recSpeed = 25000;   // microseconds per bit
 const int receiver = 2;       // photodetector pin
 
-#define IMG_WIDTH 16
-#define IMG_HEIGHT 16
+#define IMG_WIDTH 4
+#define IMG_HEIGHT 4
 
 String binaryInput = "";
 String currentChunk = "";
