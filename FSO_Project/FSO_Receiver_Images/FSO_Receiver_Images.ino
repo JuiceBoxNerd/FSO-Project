@@ -113,9 +113,10 @@ String currentChunk = "";
 String fullMessage = "";
 
 int spaceCount = 0;
+int zeroCount = 0;
 unsigned long cycle = micros();
 
-const String END_MARKER = "11111111100000000011111111"; // 24-bit marker = 3 bytes: 0xFF, 0x00, 0xFF
+const int ZERO_END_COUNT = 50;
 
 void setup() {
   Wire.begin(4);  // I2C address
@@ -142,6 +143,7 @@ void loop() {
 
   binaryInput = "";
   currentChunk = "";
+  zeroCount = 0;
 }
 
 char binaryToChar(String byteStr) {
@@ -160,21 +162,10 @@ void getInput() {
       binaryInput = binaryInput.substring(8);
     }
 
-    // Check for end marker
-    if (currentChunk.length() >= 3) {
-      String last3 = currentChunk.substring(currentChunk.length() - 3);
-      String recentBits = "";
-      for (int i = 0; i < 3; i++) {
-        String b = String((byte)last3[i], BIN);
-        while (b.length() < 8) b = "0" + b;
-        recentBits += b;
-      }
-
-      if (recentBits == END_MARKER) {
-        Serial.println("\n🛑 END_MARKER detected.");
-        currentChunk.remove(currentChunk.length() - 3);  // remove marker
-        break;
-      }
+    // End condition: 50 consecutive zeros
+    if (zeroCount >= ZERO_END_COUNT) {
+      Serial.println("\n🛑 50 consecutive 0s detected (end of transmission).");
+      break;
     }
   }
   Serial.println();
@@ -216,6 +207,8 @@ String getBit(String input) {
       resyncRequested = false;
       Serial.print(newBit);
       spaceCount++;
+      if (newBit == "0") zeroCount++;
+      else zeroCount = 0;
       cycle = micros();
       Serial.println("\n*** Resync performed (I2C) ***\n");
       return input + newBit;
@@ -234,6 +227,7 @@ String getBit(String input) {
 
   bool bit = lightDetected > (samples / 2);
   String newBit = bit ? "1" : "0";
+
   Serial.print(newBit);
   spaceCount++;
   if (spaceCount % 8 == 0) Serial.print(" ");
@@ -241,6 +235,9 @@ String getBit(String input) {
     Serial.println();
     spaceCount = 0;
   }
+
+  if (newBit == "0") zeroCount++;
+  else zeroCount = 0;
 
   return input + newBit;
 }
