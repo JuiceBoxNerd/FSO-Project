@@ -1,5 +1,5 @@
 const int recSpeed = 10000;         // microseconds per bit
-const int startBuffer = 50;        // milliseconds
+const int startBuffer = 100;        // milliseconds
 const int receiver = 2;
 const int tolerance = 3;
 const int bufferTolerance = 10;
@@ -20,7 +20,7 @@ int charCount = 0;
 bool expectingSecondResyncByte = false;
 
 void setup() {
-  pinMode(receiver, INPUT_PULLUP);
+  pinMode(receiver, INPUT);
   Serial.begin(9600);
   delay(200);
   while (!Serial);
@@ -121,6 +121,7 @@ bool startSignal() {
   // Wait for pin to go LOW (start signal)
   unsigned long startTime = micros();
   while (digitalRead(receiver)) {
+    Serial.print(digitalRead(receiver));
     if ((micros() - startTime) > (unsigned long)startBuffer * 1000) {
       Serial.println("Start Failure: 1");
       return false;

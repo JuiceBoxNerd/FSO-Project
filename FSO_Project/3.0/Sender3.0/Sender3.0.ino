@@ -1,5 +1,5 @@
 const int sendSpeed = 10000;       // microseconds per bit
-const int startBuffer = 50;       // milliseconds
+const int startBuffer = 100;       // milliseconds
 const int transmitter = 2;
 
 const char RESYNC_BYTE = 0xFF;
