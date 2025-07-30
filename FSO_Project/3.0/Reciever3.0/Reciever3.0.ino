@@ -120,8 +120,7 @@ void getInput() {
 bool startSignal() {
   // Wait for pin to go LOW (start signal)
   unsigned long startTime = micros();
-  while (digitalRead(receiver)) {
-    Serial.print(digitalRead(receiver));
+  while (!digitalRead(receiver)) {
     if ((micros() - startTime) > (unsigned long)startBuffer * 1000) {
       Serial.println("Start Failure: 1");
       return false;
@@ -138,7 +137,7 @@ void getBit() {
 
   // Measure LOW
   cycle = micros();
-  while (!digitalRead(receiver)) {
+  while (digitalRead(receiver)) {
     yield();
     if ((micros() - cycle) > (unsigned long)recSpeed * 4) {
       Serial.print("Broke 0s");
@@ -158,7 +157,7 @@ void getBit() {
 
   // Measure HIGH
   cycle = micros();
-  while (digitalRead(receiver)) {
+  while (!digitalRead(receiver)) {
     yield();
     if ((micros() - cycle) > (unsigned long)recSpeed * 4) {
       return;
